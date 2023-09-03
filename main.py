@@ -23,6 +23,9 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
+# This was changes through emacs
+# Testing magit
+
 def fetch_schema(server, database, username, password):
     schema_info = {}
 
