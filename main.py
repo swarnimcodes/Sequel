@@ -23,8 +23,10 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
-# This was changes through emacs
-# Testing magit
+# trying to implement pyodbc connection function just once to simplify codebase
+def connection(server, database, username, password):
+    return cursor
+
 
 def fetch_schema(server, database, username, password):
     schema_info = {}
