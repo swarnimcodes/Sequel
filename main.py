@@ -229,27 +229,26 @@ def app1():
             print("No databases to compare." + RED + " Exiting." + RESET)
             return
 
-        # TODO: Numbering should be from 1 to n not countdown
-        while number_of_target_db > 0:
+        for target_db_number in range(1, number_of_target_db + 1):
             # Initialize the nested dictionary for the current target DB number
-            nested_target_dbs[number_of_target_db] = {}
-            nested_target_dbs[number_of_target_db]["server"] = input(
-                f"\nEnter" + GREEN + " Server Address " + RESET + f"for Target DB number {number_of_target_db}: "
+            nested_target_dbs[target_db_number] = {}
+            nested_target_dbs[target_db_number]["server"] = input(
+                f"\nEnter" + GREEN + " Server Address " + RESET + f"for Target DB number {target_db_number}: "
             )
-            nested_target_dbs[number_of_target_db]["database"] = input(
-                f"Enter" + GREEN + " Database Name " + RESET + f"for Target DB number {number_of_target_db}: "
+            nested_target_dbs[target_db_number]["database"] = input(
+                f"Enter" + GREEN + " Database Name " + RESET + f"for Target DB number {target_db_number}: "
             )
-            nested_target_dbs[number_of_target_db]["username"] = input(
-                f"Enter" + GREEN + " User Name " + RESET + f"for Target DB number {number_of_target_db}: "
+            nested_target_dbs[target_db_number]["username"] = input(
+                f"Enter" + GREEN + " User Name " + RESET + f"for Target DB number {target_db_number}: "
             )
-            nested_target_dbs[number_of_target_db]["password"] = input(
-                f"Enter" + GREEN + " Password " + RESET + f"for Target DB number {number_of_target_db}: "
+            nested_target_dbs[target_db_number]["password"] = input(
+                f"Enter" + GREEN + " Password " + RESET + f"for Target DB number {target_db_number}: "
             )
 
-            target_server = nested_target_dbs[number_of_target_db]["server"]
-            target_database = nested_target_dbs[number_of_target_db]["database"]
-            target_username = nested_target_dbs[number_of_target_db]["username"]
-            target_password = nested_target_dbs[number_of_target_db]["password"]
+            target_server = nested_target_dbs[target_db_number]["server"]
+            target_database = nested_target_dbs[target_db_number]["database"]
+            target_username = nested_target_dbs[target_db_number]["username"]
+            target_password = nested_target_dbs[target_db_number]["password"]
 
             if (
                 not target_server
@@ -258,7 +257,7 @@ def app1():
                 or not target_password
             ):
                 print(
-                    f"Target database number {number_of_target_db}'s details are" + RED +  " incomplete" + RESET + ". Skipping comparison for this target."
+                    f"Target database number {target_db_number}'s details are" + RED +  " incomplete" + RESET + ". Skipping comparison for this target."
                 )
             else:
                 try:
@@ -269,15 +268,13 @@ def app1():
                         workbook,
                         source_schema,
                         target_schema,
-                        nested_target_dbs[number_of_target_db]["database"],
+                        nested_target_dbs[target_db_number]["database"],
                     )
 
                 except Exception as e:
                     print(
-                        f"\nError fetching schema for target database number {number_of_target_db}: {str(e)}"
+                        f"\nError fetching schema for target database number {target_db_number}: {str(e)}"
                     )
-
-            number_of_target_db = number_of_target_db - 1
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
         excel_file_name = f"Schema_Comparison_Report_{timestamp}.xlsx"
@@ -321,7 +318,7 @@ def app1():
         print(YELLOW + "Summary: \n" + RESET)
 
         for target_db, target_summary in summary.items():
-            print(f"\nTarget Database: {target_db}")
+            print(YELLOW + "\nTarget Database: " + RESET + f"{target_db}")
             print(f"Missing Columns: {target_summary['Missing Columns']}")
             print(f"Different Specifications: {target_summary['Different Specifications']}")
             print(f"Total Differences: {target_summary['Total Differences']}\n")
@@ -405,10 +402,13 @@ def app2():
         print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
         source_db_dir = input("Enter the Source Database" + GREEN + " directory location" + RESET + ":\t")
         print("\n")
-        
+
         if not source_db_dir.strip():
             print(RED + "Error: " + RESET + "No source database provided. Exiting the program...\n\n")
             sys.exit(1)
+
+        if not os.path.isdir(source_db_dir):
+            raise ValueError(f"Error: The directory '{source_db_dir}' does not exist or is invalid.\n\n")
 
         num_target_dbs = input("Enter" + GREEN + " number of Target Databases " + RESET + "you want to compare:\t")
 
@@ -425,7 +425,16 @@ def app2():
         target_db_dirs = []
 
         for i in range(num_target_dbs):
-            target_db_dirs.append(input("\nEnter " + GREEN + "target database directory location " + RESET + f"for target database number {i+1}:\t"))
+            while True:
+                target_db_dir = input("\nEnter " + GREEN + "target database directory location " + RESET + f"for target database number {i+1}:\t")
+
+                if not target_db_dir.strip():
+                    print(RED + "Error: " + RESET + "No input provided. Please enter a directory location.\n")
+                elif not os.path.exists(target_db_dir):
+                    print(RED + "Error: " + RESET + f"The directory '{target_db_dir}' does not exist or is invalid. Please enter a valid directory location.\n")
+                else:
+                    target_db_dirs.append(target_db_dir)
+                    break  # Valid input, exit the loop
 
         sp_data = []
 
