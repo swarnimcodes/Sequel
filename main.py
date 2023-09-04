@@ -14,6 +14,7 @@ import os
 import difflib
 import sqlparse
 import re
+import sys
 import pandas as pd
 from tqdm import tqdm
 
@@ -368,98 +369,119 @@ def fetch_stored_procedures(server, database, username, password):
 
 
 def strip_comments(sql_file_contents):
-    stripped_sql_file = re.sub(r"--.*", "", sql_file_contents)
-    stripped_sql_file = re.sub(r"/\*.*?\*/", "", stripped_sql_file, flags=re.DOTALL)
-    stripped_sql_file = "\n".join(
-        " ".join(part.strip() for part in line.split() if part.strip())
-        for line in stripped_sql_file.splitlines()
-        if line.strip()
-    )
+    try:
+        stripped_sql_file = re.sub(r"--.*", "", sql_file_contents)
+        stripped_sql_file = re.sub(r"/\*.*?\*/", "", stripped_sql_file, flags=re.DOTALL)
+        stripped_sql_file = "\n".join(
+            " ".join(part.strip() for part in line.split() if part.strip())
+            for line in stripped_sql_file.splitlines()
+            if line.strip()
+        )
+    except Exception as e:
+        print(f"Error while stripping comments: {str(e)}")
+        stripped_sql_file = ""
+
     return stripped_sql_file
 
 
 def difference(source_sql_path, test_sql_path) -> bool:
-    source_contents = open(source_sql_path, "r").read().upper()
-    test_contents = open(test_sql_path, "r").read().upper()
+    try:
+        source_contents = open(source_sql_path, "r").read().upper()
+        test_contents = open(test_sql_path, "r").read().upper()
+        stripped_sql_file_source = strip_comments(source_contents)
+        stripped_sql_file_test = strip_comments(test_contents)
 
-    stripped_sql_file_source = strip_comments(source_contents)
-    stripped_sql_file_test = strip_comments(test_contents)
+        if stripped_sql_file_source == stripped_sql_file_test:
+            return True
+        else:
+            return False
 
-    if stripped_sql_file_source == stripped_sql_file_test:
-        return True
-    else:
-        return False
+    except Exception as e:
+        print(f"Error while comparing SQL Files: {str(e)}")
 
 
 def app2():
-    print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
-    source_db_dir = input("Enter the Source Database" + GREEN + " directory location" + RESET + ":\t")
-    print("\n")
+    try:
+        print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
+        source_db_dir = input("Enter the Source Database" + GREEN + " directory location" + RESET + ":\t")
+        print("\n")
+        
+        if not source_db_dir.strip():
+            print(RED + "Error: " + RESET + "No source database provided. Exiting the program...\n\n")
+            sys.exit(1)
 
-    num_target_dbs = int(
-        input("Enter" + GREEN+ " number of Target Databases " + RESET + "you want to compare:\t")
-    )
+        num_target_dbs = input("Enter" + GREEN + " number of Target Databases " + RESET + "you want to compare:\t")
 
-    target_db_dirs = []
+        if not num_target_dbs:
+            print(RED + "\n\nError: " + RESET + "No input provided. Exiting the program...\n\n")
+            sys.exit(1)
 
-    for i in range(num_target_dbs):
-        target_db_dirs.append(input("\nEnter " + GREEN + "target database directory location " + RESET + f"for target database number {i+1}:\t"))
+        try:
+            num_target_dbs = int(num_target_dbs)
+        except ValueError:
+            print(RED + "\n\nError: " + RESET +"Invalid input. Please enter a valid positive integer.\n\n")
+            sys.exit(1)
 
-    sp_data = []
+        target_db_dirs = []
 
-    # Get the list of sql file in source database
-    source_sql_file_list = os.listdir(source_db_dir)
+        for i in range(num_target_dbs):
+            target_db_dirs.append(input("\nEnter " + GREEN + "target database directory location " + RESET + f"for target database number {i+1}:\t"))
 
-    for sql_file in source_sql_file_list:
-        sp_name = sql_file[:-4]  # Remove the .sql extension
-        sp_info = {"SP Name": sp_name}
-        source_sql_path = os.path.join(source_db_dir, sql_file)
+        sp_data = []
 
-        #
-        for target_db_dir in target_db_dirs:
-            target_sql_path = os.path.join(target_db_dir, sql_file)
-            if os.path.exists(target_sql_path):
-                if difference(source_sql_path, target_sql_path):
-                    sp_info[os.path.basename(target_db_dir)] = "PRESENT & EQUAL"
+        # Get the list of sql file in source database
+        source_sql_file_list = os.listdir(source_db_dir)
+
+        for sql_file in source_sql_file_list:
+            sp_name = sql_file[:-4]  # Remove the .sql extension
+            sp_info = {"SP Name": sp_name}
+            source_sql_path = os.path.join(source_db_dir, sql_file)
+
+            for target_db_dir in target_db_dirs:
+                target_sql_path = os.path.join(target_db_dir, sql_file)
+                if os.path.exists(target_sql_path):
+                    if difference(source_sql_path, target_sql_path):
+                        sp_info[os.path.basename(target_db_dir)] = "PRESENT & EQUAL"
+                    else:
+                        sp_info[os.path.basename(target_db_dir)] = "PRESENT & UNEQUAL"
                 else:
-                    sp_info[os.path.basename(target_db_dir)] = "PRESENT & UNEQUAL"
+                    sp_info[os.path.basename(target_db_dir)] = "ABSENT"
 
-            else:
-                sp_info[os.path.basename(target_db_dir)] = "ABSENT"
+            sp_data.append(sp_info)
 
-        sp_data.append(sp_info)
+        df = pd.DataFrame(sp_data)
 
-    df = pd.DataFrame(sp_data)
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+        output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
+        df.to_excel(output_excel_path, index=False)
+        # Load the existing workbook and sheet
+        wb = load_workbook(output_excel_path)
+        ws = wb.active
 
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
-    output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
-    df.to_excel(output_excel_path, index=False)
-    # Load the existing workbook and sheet
-    wb = load_workbook(output_excel_path)
-    ws = wb.active
+        # Apply cell coloring based on the cell values
+        for row in ws.iter_rows(
+            min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
+        ):
+            for cell in row:
+                if cell.value == "PRESENT & UNEQUAL":
+                    cell.fill = PatternFill(
+                        start_color="FCD5B4", end_color="FCD5B4", fill_type="solid"
+                    )
+                elif cell.value == "ABSENT":
+                    cell.fill = PatternFill(
+                        start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
+                    )
 
-    # Apply cell coloring based on the cell values
-    for row in ws.iter_rows(
-        min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
-    ):
-        for cell in row:
-            if cell.value == "PRESENT & UNEQUAL":
-                cell.fill = PatternFill(
-                    start_color="FCD5B4", end_color="FCD5B4", fill_type="solid"
-                )
-            elif cell.value == "ABSENT":
-                cell.fill = PatternFill(
-                    start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
-                )
+        # Save the modified workbook
+        wb.save(output_excel_path)
+        excel_absolute_path = os.path.abspath(output_excel_path)
+        print(GREEN + "\nSuccess: " + RESET + f"Excel Report has been generated at {excel_absolute_path}\n")
+        # TODO: Add summary
+        os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
+        input("Press Enter to exit...")
 
-    # Save the modified workbook
-    wb.save(output_excel_path)
-    excel_absolute_path = os.path.abspath(output_excel_path)
-    print(GREEN +"\nSuccess: " + RESET + f"Excel Report has been generated at {excel_absolute_path}\n")
-    # TODO: Add summary
-    os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
-    input("Press Enter to exit...")
-
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
 # END OF APP 2 #########################################################################
 
 
