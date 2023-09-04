@@ -90,7 +90,7 @@ def generate_excel_report(workbook, source_schema, target_schema, target_db_name
     comparison_results = []
     comparison_results = perform_schema_comparison(source_schema, target_schema)
     sheet = workbook.create_sheet(target_db_name)
-
+    
     # Write Headers
     sheet["A1"] = "Schema"
     sheet["B1"] = "Table Name"
@@ -166,6 +166,8 @@ def perform_schema_comparison(source_schema, target_schema):
 
     return comparison_results
 
+# TODO: Add color for target db entries
+# TODO: Add summary at the end of completion
 
 def app1():
     try:
@@ -211,30 +213,35 @@ def app1():
         # Create a single workbook outside the loop
         workbook = openpyxl.Workbook()
 
-        number_of_target_db = int(
-            input("How many databases do you want to compare against source? \t")
-        )
+        try:
+            number_of_target_db = input("How many databases do you want to compare against source? \t")
+            number_of_target_db = int(number_of_target_db)
+        except Exception as e:
+            print(RED + "Error: " + RESET + "No input or incorrect form of input was provided.")
+            return
+            
         nested_target_dbs = {}
-
+        number_of_target_db_copy = number_of_target_db
+        
         if number_of_target_db <= 0:
             print("No databases to compare." + RED + " Exiting." + RESET)
             return
-
-        # Numbering should be from 1 to n not countdown
+                                        
+        # TODO: Numbering should be from 1 to n not countdown
         while number_of_target_db > 0:
             # Initialize the nested dictionary for the current target DB number
             nested_target_dbs[number_of_target_db] = {}
             nested_target_dbs[number_of_target_db]["server"] = input(
-                f"\nEnter Server Address for Target DB number {number_of_target_db}: "
+                f"\nEnter" + GREEN + " Server Address " + RESET + f"for Target DB number {number_of_target_db}: "
             )
             nested_target_dbs[number_of_target_db]["database"] = input(
-                f"Enter Database Name for Target DB number {number_of_target_db}: "
+                f"Enter" + GREEN + " Database Name " + RESET + f"for Target DB number {number_of_target_db}: "
             )
             nested_target_dbs[number_of_target_db]["username"] = input(
-                f"Enter Username for Target DB number {number_of_target_db}: "
+                f"Enter" + GREEN + " User Name " + RESET + f"for Target DB number {number_of_target_db}: "
             )
             nested_target_dbs[number_of_target_db]["password"] = input(
-                f"Enter Password for Target DB number {number_of_target_db}: "
+                f"Enter" + GREEN + " Password " + RESET + f"for Target DB number {number_of_target_db}: "
             )
 
             target_server = nested_target_dbs[number_of_target_db]["server"]
@@ -249,7 +256,7 @@ def app1():
                 or not target_password
             ):
                 print(
-                    "Target database number {number_of_target_db}'s details are incomplete. Skipping comparison for this target."
+                    f"Target database number {number_of_target_db}'s details are" + RED +  " incomplete" + RESET + ". Skipping comparison for this target."
                 )
             else:
                 try:
@@ -262,9 +269,10 @@ def app1():
                         target_schema,
                         nested_target_dbs[number_of_target_db]["database"],
                     )
+                    
                 except Exception as e:
                     print(
-                        f"Error fetching schema for target database number {number_of_target_db}: {str(e)}"
+                        f"\nError fetching schema for target database number {number_of_target_db}: {str(e)}"
                     )
 
             number_of_target_db = number_of_target_db - 1
@@ -275,8 +283,10 @@ def app1():
         workbook.remove(workbook.active)
         workbook.save(excel_file_name)
         print(
-            f"\nExcel file successfully created at {os.path.abspath(excel_file_name)}\n\n"
+            f"\nExcel file" + GREEN + " successfully " + RESET + f"created at {os.path.abspath(excel_file_name)}\n\n"
         )
+        print(YELLOW + "Summary: \n" + RESET)
+        print(f"Number of databases compared against source: {number_of_target_db_copy}")
         os.system(f'explorer /select,"{os.path.abspath(excel_file_name)}"')
     except ValueError as ve:
         print(f"Error: {ve}")
@@ -665,7 +675,7 @@ def main():
     except ValueError:
         print("Please enter a valid numeric choice.")
     except Exception as e:
-        print(f"Error occurred: {str(e)}")
+        print(f"Error occurred: {str(e)}")  # TODO: Wait for user to press a key to exit
 
 
 if __name__ == "__main__":
