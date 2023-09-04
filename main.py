@@ -3,7 +3,7 @@ import signal
 import datetime
 from os.path import exists
 import re
-
+import datetime
 from openpyxl import load_workbook
 import openpyxl
 from openpyxl.styles import PatternFill
@@ -25,7 +25,8 @@ RESET = "\033[0m"
 
 # trying to implement pyodbc connection function just once to simplify codebase
 def connection(server, database, username, password):
-    return cursor
+    # return cursor
+    return
 
 
 def fetch_schema(server, database, username, password):
@@ -90,7 +91,7 @@ def generate_excel_report(workbook, source_schema, target_schema, target_db_name
     comparison_results = []
     comparison_results = perform_schema_comparison(source_schema, target_schema)
     sheet = workbook.create_sheet(target_db_name)
-    
+
     # Write Headers
     sheet["A1"] = "Schema"
     sheet["B1"] = "Table Name"
@@ -219,14 +220,14 @@ def app1():
         except Exception as e:
             print(RED + "Error: " + RESET + "No input or incorrect form of input was provided.")
             return
-            
+
         nested_target_dbs = {}
         number_of_target_db_copy = number_of_target_db
-        
+
         if number_of_target_db <= 0:
             print("No databases to compare." + RED + " Exiting." + RESET)
             return
-                                        
+
         # TODO: Numbering should be from 1 to n not countdown
         while number_of_target_db > 0:
             # Initialize the nested dictionary for the current target DB number
@@ -269,7 +270,7 @@ def app1():
                         target_schema,
                         nested_target_dbs[number_of_target_db]["database"],
                     )
-                    
+
                 except Exception as e:
                     print(
                         f"\nError fetching schema for target database number {number_of_target_db}: {str(e)}"
@@ -285,9 +286,48 @@ def app1():
         print(
             f"\nExcel file" + GREEN + " successfully " + RESET + f"created at {os.path.abspath(excel_file_name)}\n\n"
         )
+
+        summary = {}
+
+        excel_file = openpyxl.load_workbook(excel_file_name)
+
+        for sheet_name in excel_file.sheetnames:
+            sheet = excel_file[sheet_name]
+
+            missing_columns = 0
+            different_specifications = 0
+            total_differences = 0
+
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                data_type = row[3]
+
+                if data_type == "Missing Column":
+                    missing_columns = missing_columns + 1
+                elif data_type == "Different Specification":
+                    different_specifications = different_specifications + 1
+
+            total_differences = missing_columns + different_specifications
+
+            summary[sheet_name] = {
+                "Missing Columns": missing_columns,
+                "Different Specifications": different_specifications,
+                "Total Differences": total_differences
+            }
+
+        excel_file.close()
+
+
         print(YELLOW + "Summary: \n" + RESET)
-        print(f"Number of databases compared against source: {number_of_target_db_copy}")
+
+        for target_db, target_summary in summary.items():
+            print(f"\nTarget Database: {target_db}")
+            print(f"Missing Columns: {target_summary['Missing Columns']}")
+            print(f"Different Specifications: {target_summary['Different Specifications']}")
+            print(f"Total Differences: {target_summary['Total Differences']}\n")
+
+        print(f"\nNumber of databases compared against source: {number_of_target_db_copy}")
         os.system(f'explorer /select,"{os.path.abspath(excel_file_name)}"')
+        input("\n\nPress Enter to exit...")
     except ValueError as ve:
         print(f"Error: {ve}")
     except Exception as e:
@@ -352,20 +392,18 @@ def difference(source_sql_path, test_sql_path) -> bool:
 
 
 def app2():
-    print("Enter details of your SOURCE database: \n")
-    source_db_dir = input("Enter the SOURCE database directory location: \n")
+    print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
+    source_db_dir = input("Enter the Source Database" + GREEN + " directory location" + RESET + ":\t")
+    print("\n")
 
     num_target_dbs = int(
-        input("Enter number of TARGET databases you want to compare: \n")
+        input("Enter" + GREEN+ " number of Target Databases " + RESET + "you want to compare:\t")
     )
 
     target_db_dirs = []
 
-    while num_target_dbs > 0:
-        target_db_dirs.append(
-            input(f"Enter location for target database number {num_target_dbs}: ")
-        )
-        num_target_dbs = num_target_dbs - 1
+    for i in range(num_target_dbs):
+        target_db_dirs.append(input("\nEnter " + GREEN + "target database directory location " + RESET + f"for target database number {i+1}:\t"))
 
     sp_data = []
 
@@ -393,9 +431,8 @@ def app2():
 
     df = pd.DataFrame(sp_data)
 
-    output_excel_path = input(
-        "Name the excel file: "
-    )  # Make it so that the excel file is created automatically
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
     df.to_excel(output_excel_path, index=False)
     # Load the existing workbook and sheet
     wb = load_workbook(output_excel_path)
@@ -417,9 +454,11 @@ def app2():
 
     # Save the modified workbook
     wb.save(output_excel_path)
-    # Open the folder instead
-    os.system(f'start excel "{output_excel_path}"')
-
+    excel_absolute_path = os.path.abspath(output_excel_path)
+    print(GREEN +"\nSuccess: " + RESET + f"Excel Report has been generated at {excel_absolute_path}\n")
+    # TODO: Add summary
+    os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
+    input("Press Enter to exit...")
 
 # END OF APP 2 #########################################################################
 
@@ -675,8 +714,9 @@ def main():
     except ValueError:
         print("Please enter a valid numeric choice.")
     except Exception as e:
-        print(f"Error occurred: {str(e)}")  # TODO: Wait for user to press a key to exit
+        print(f"Error occurred: {str(e)}")
 
+        # TODO: Wait for user to press a key to exit
 
 if __name__ == "__main__":
     main()
