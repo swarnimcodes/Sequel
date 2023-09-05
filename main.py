@@ -1,4 +1,6 @@
 import os
+import codecs
+import chardet  # You may need to install this library
 import signal
 import datetime
 from os.path import exists
@@ -438,8 +440,22 @@ def strip_comments(sql_file_contents):
 
 def difference(source_sql_path, test_sql_path) -> bool:
     try:
-        source_contents = open(source_sql_path, "r").read().upper()
-        test_contents = open(test_sql_path, "r").read().upper()
+
+        try:
+            with open(source_sql_path, 'r', encoding='utf-8') as file:
+                source_contents = file.read().upper()
+        except UnicodeError:
+            with open(source_sql_path, 'r', encoding='utf-16') as file:
+                source_contents = file.read().upper()
+
+        try:
+            with open(test_sql_path, 'r', encoding='utf-8') as file:
+                test_contents = file.read().upper()
+        except UnicodeError:
+            with open(test_sql_path, 'r', encoding='utf-16') as file:
+                test_contents = file.read().upper()
+
+
         stripped_sql_file_source = strip_comments(source_contents)
         stripped_sql_file_test = strip_comments(test_contents)
 
@@ -450,6 +466,40 @@ def difference(source_sql_path, test_sql_path) -> bool:
 
     except Exception as e:
         print(f"Error while comparing SQL Files: {str(e)}")
+
+
+
+def read_sql_files_neutrally(sql_dir):
+    sql_contents = {}  # Dictionary to store SQL file contents
+
+    try:
+        # Check if the SQL directory exists
+        if not os.path.exists(sql_dir):
+            print(f"Directory '{sql_dir}' not found.")
+            return sql_contents
+
+        # List all files in the directory
+        files = os.listdir(sql_dir)
+
+        # Loop through each file
+        for file_name in files:
+            # Check if the file has a .sql extension
+            if file_name.endswith('.sql'):
+                file_path = os.path.join(sql_dir, file_name)
+
+                # Detect the file's encoding using chardet
+                with open(file_path, 'rb') as binary_file:
+                    encoding_info = chardet.detect(binary_file.read())
+                    detected_encoding = encoding_info['encoding']
+
+                # Open the file with the detected encoding
+                with codecs.open(file_path, 'r', detected_encoding) as sql_file:
+                    sql_contents[file_name] = sql_file.read()
+
+    except Exception as e:
+        print(f"Error while reading SQL files: {str(e)}")
+
+    return sql_contents
 
 
 def app2():
@@ -832,11 +882,25 @@ def app3():
     # Save the workbook
     wb.save(excel_output_file)
     print(YELLOW + "\n\nSummary: " + RESET)
-    print("Number of files" + RED + " Absent " + RESET + f"in Target Database: {num_files_absent}")
-    print("Number of files with" + RED + " Unequal Content " + RESET + f"in Target Database: {num_files_different}")
+    print(
+        "Number of files"
+        + RED
+        + " Absent "
+        + RESET
+        + f"in Target Database: {num_files_absent}"
+    )
+    print(
+        "Number of files with"
+        + RED
+        + " Unequal Content "
+        + RESET
+        + f"in Target Database: {num_files_different}"
+    )
     print(f"Total files scanned: {total_files_scanned}\n\n")
     print(f"Diff Files are stored in {os.path.abspath(output_dir)}")
-    print(f"Excel file generated and stored in {os.path.dirname(os.path.abspath(excel_output_file))}\n\n")
+    print(
+        f"Excel file generated and stored in {os.path.dirname(os.path.abspath(excel_output_file))}\n\n"
+    )
     # Open the folder insted of the excel file
     os.system(f'explorer /select, "{os.path.abspath(excel_output_file)}"')
 
@@ -845,9 +909,10 @@ def app3():
 
 # Convert all sql files to utf-8 by default and remove app 4
 
+
 def is_utf8(file_path):
     try:
-        with open(file_path, 'r', encoding='utf-8') as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             file.read()
         return True
     except UnicodeDecodeError:
@@ -888,11 +953,13 @@ def app4():
 
 # END OF APP 4 #########################################################################
 
+
 def app5():
     pass
 
 
 # END OF APP 5 ######################################
+
 
 def main():
     try:
