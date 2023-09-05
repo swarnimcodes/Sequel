@@ -441,6 +441,15 @@ def app2():
         # Get the list of sql file in source database
         source_sql_file_list = os.listdir(source_db_dir)
 
+        summary = {}
+
+        for target_db_dir in target_db_dirs:
+            summary[target_db_dir] = {
+                "Absent Entries": 0,
+                "Present & Unequal Entries": 0,
+                "Present & Equal Entries": 0
+            }
+
         for sql_file in source_sql_file_list:
             sp_name = sql_file[:-4]  # Remove the .sql extension
             sp_info = {"SP Name": sp_name}
@@ -451,14 +460,18 @@ def app2():
                 if os.path.exists(target_sql_path):
                     if difference(source_sql_path, target_sql_path):
                         sp_info[os.path.basename(target_db_dir)] = "PRESENT & EQUAL"
+                        summary[target_db_dir]["Present & Equal Entries"] += 1
                     else:
                         sp_info[os.path.basename(target_db_dir)] = "PRESENT & UNEQUAL"
+                        summary[target_db_dir]["Present & Unequal Entries"] += 1
                 else:
                     sp_info[os.path.basename(target_db_dir)] = "ABSENT"
+                    summary[target_db_dir]["Absent Entries"] += 1
 
             sp_data.append(sp_info)
 
         df = pd.DataFrame(sp_data)
+
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
         output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
@@ -468,9 +481,7 @@ def app2():
         ws = wb.active
 
         # Apply cell coloring based on the cell values
-        for row in ws.iter_rows(
-            min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
-        ):
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column):
             for cell in row:
                 if cell.value == "PRESENT & UNEQUAL":
                     cell.fill = PatternFill(
@@ -483,9 +494,19 @@ def app2():
 
         # Save the modified workbook
         wb.save(output_excel_path)
+
+        # Print the summary for each target database
+        print(YELLOW + "\n\nSummary:\n\n" + RESET)
+        for target_db_dir, summary_data in summary.items():
+            print(YELLOW + "\nTarget Database: " + RESET + GREEN + f"{os.path.basename(target_db_dir)}" + RESET)
+            print(f"Absent Entries: {summary_data['Absent Entries']}")
+            print(f"Present & Unequal Entries: {summary_data['Present & Unequal Entries']}")
+            print(f"Present & Equal Entries: {summary_data['Present & Equal Entries']}")
+            print(f"Total Entries Scanned Against Source: {summary_data['Absent Entries']+summary_data['Present & Unequal Entries']+summary_data['Present & Equal Entries']}")
+            print("\n")
+
         excel_absolute_path = os.path.abspath(output_excel_path)
         print(GREEN + "\nSuccess: " + RESET + f"Excel Report has been generated at {excel_absolute_path}\n")
-        # TODO: Add summary
         os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
         input("Press Enter to exit...")
 
