@@ -612,109 +612,11 @@ def app2_2__():
     # except Exception as e:
     #     print(f"An unexpected error occurred: {str(e)}")
 
-
-
-
-
-def get_stored_procedures(cursor):
-    cursor.execute("SELECT name FROM sys.procedures WHERE type_desc = 'SQL_STORED_PROCEDURE'")
-    return [row.name for row in cursor.fetchall()]
-
-def get_stored_procedure_definition(cursor, procedure_name):
-    cursor.execute(f"EXEC sp_helptext '{procedure_name}'")
-    rows = cursor.fetchall()
-    definition = "".join([row[0] for row in rows])
-    return definition
-
-def compare_stored_procedures(source_conn, target_connections):
-    source_cursor = source_conn.cursor()
-
-    source_procedures = get_stored_procedures(source_cursor)
-
-    comparison_data = []
-
-    for target_conn in target_connections:
-        target_cursor = target_conn.cursor()
-        target_procedures = get_stored_procedures(target_cursor)
-
-        # Extract the server name (SQL Server instance name) from the connection string
-        target_conn_str = target_conn.getinfo(pyodbc.SQL_DATA_SOURCE_NAME)
-        print(f"Comparing with Target Database: {target_conn_str}")
-
-        comparison_result = {}
-
-        for procedure_name in source_procedures:
-            source_definition = get_stored_procedure_definition(source_cursor, procedure_name)
-
-            if procedure_name in target_procedures:
-                target_definition = get_stored_procedure_definition(target_cursor, procedure_name)
-
-                if source_definition == target_definition:
-                    comparison_result[procedure_name] = "Identical"
-                else:
-                    comparison_result[procedure_name] = "Different"
-            else:
-                comparison_result[procedure_name] = "Absent"
-
-        comparison_result["Target Database Name"] = target_conn_str  # Add target database name
-        comparison_data.append(comparison_result)
-
-    return comparison_data
-
-def store_comparison_report(comparison_data, source_db_name, source_procedures):
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
-    excel_filename = f"SP_Comparison_Report_{timestamp}.xlsx"
-
-    # Create a DataFrame from the comparison data
-    df = pd.DataFrame(comparison_data)
-
-    # Add a column for source database name
-    df["Source Database Name"] = source_db_name
-
-    # Specify the column order
-    cols = ["Source Database Name", "Target Database Name"] + source_procedures
-
-    # Reorder columns
-    df = df[cols]
-
-    # Save the DataFrame to an Excel file
-    df.to_excel(excel_filename, index=False)
-
-    print(f"Comparison report has been saved to: {excel_filename}")
+## APP 2_2()
 
 def app2_2():
-    # Connect to the source database
-    source_server = "172.16.0.28"
-    source_db = "DB_PRMITR_ERP_20230701"
-    source_user = "Swarnim_Intern"
-    source_password = "Swarnim14#"
-    source_connection_string = f"DRIVER=SQL Server;SERVER={source_server};DATABASE={source_db};UID={source_user};PWD={source_password}"
+    pass
 
-    source_conn = pyodbc.connect(source_connection_string)
-
-    # Allow the user to enter multiple target database connection strings
-    target_connection_strings = []
-
-    num_targets = int(input("Enter the number of target databases: "))
-    for i in range(num_targets):
-        conn_string = input(f"Enter connection string for target database {i + 1}: ")
-        target_connection_strings.append(conn_string)
-
-    target_connections = [pyodbc.connect(conn_string) for conn_string in target_connection_strings]
-
-    # Get the source database name
-    source_db_name = source_db
-
-    # Compare stored procedures
-    comparison_data = compare_stored_procedures(source_conn, target_connections)
-
-    # Close database connections
-    source_conn.close()
-    for conn in target_connections:
-        conn.close()
-
-    # Store the comparison report
-    store_comparison_report(comparison_data, source_db_name, get_stored_procedures(source_conn))
 
 
 
@@ -1012,7 +914,7 @@ def app3():
             RED
             + "Error: "
             + RESET
-            + f"The directory '{folder1_path}' is invalid. Exiting program...\n"
+            + f"The directory '{folder2_path}' is invalid. Exiting program...\n"
         )
         sys.exit(1)
 
@@ -1024,9 +926,8 @@ def app3():
         start_color="ffd6ca", end_color="ffd6ca", fill_type="solid"
     )
 
-    nltk.download(
-        "punkt", quiet=True
-    )  # No output should be thrown on terminal when downloading
+    nltk.download("words", quiet=True)
+    nltk.download("punkt", quiet=True)  # No output should be thrown on terminal when downloading
     nltk.download("words", quiet=True)
     for sql_file in os.listdir(folder1_path):  # Path of source will be passed here
         if sql_file.endswith(".sql"):
@@ -1060,7 +961,8 @@ def app3():
                 normalized_sql_2 = normalize_sql(file2_contents)
                 file2_nocomments = strip_sql_comments(normalized_sql_2)
 
-                if file1_nocomments == file2_nocomments:
+                # TODO implement difference
+                if difference(file1_path, file2_path):
                     content_comparison = "Equal"
                     # print(f"Files {sql_file} are equal")
                 else:
