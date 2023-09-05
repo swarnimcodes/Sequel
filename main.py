@@ -845,6 +845,14 @@ def app3():
 
 # Convert all sql files to utf-8 by default and remove app 4
 
+def is_utf8(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            file.read()
+        return True
+    except UnicodeDecodeError:
+        return False
+
 
 def convert_utf16_to_utf8(input_file_path, output_file_path):
     try:
@@ -880,6 +888,11 @@ def app4():
 
 # END OF APP 4 #########################################################################
 
+def app5():
+    pass
+
+
+# END OF APP 5 ######################################
 
 def main():
     try:
