@@ -472,7 +472,7 @@ def download_stored_procedure(server, database, username, password, sp_name, out
         stored_procedure_text = "\n".join([row[0] for row in cursor.fetchall()])
 
         # Write the stored procedure text to the output file
-        with open(output_file_path, 'w', encoding='utf-8') as output_file:
+        with open(output_file_path, "w", encoding="utf-8") as output_file:
             output_file.write(stored_procedure_text)
 
         print(f"Stored procedure '{sp_name}' downloaded to '{output_file_path}'.")
@@ -487,38 +487,56 @@ def download_stored_procedure(server, database, username, password, sp_name, out
 
 
 def app2_2__():
-
     print("Enter Source Database Details:")
     source_server = input("Enter server address:\t")
     source_database = input("Enter database name:\t")
     source_username = input("Enter username:\t")
     source_password = input("Enter password:\t")
 
-    source_stored_procedures = fetch_stored_procedures(source_server, source_database, source_username, source_password)
+    source_stored_procedures = fetch_stored_procedures(
+        source_server, source_database, source_username, source_password
+    )
 
     print(source_stored_procedures)
 
     # print("\n\n")
 
     for i in range(len(source_stored_procedures)):
-        output_file_path = f"C:\\Users\\swarn\\github\\Sequel\\testsql\\{source_stored_procedures[i]}"
-        sqlfile = download_stored_procedure(source_server, source_database, source_username, source_password, source_stored_procedures[i], output_file_path)
+        output_file_path = (
+            f"C:\\Users\\swarn\\github\\Sequel\\testsql\\{source_stored_procedures[i]}"
+        )
+        sqlfile = download_stored_procedure(
+            source_server,
+            source_database,
+            source_username,
+            source_password,
+            source_stored_procedures[i],
+            output_file_path,
+        )
         print("\n\n")
         print(sqlfile)
 
-
-    num_of_target_dbs = int(input("How many target databases do you want to compare against source?\t"))
+    num_of_target_dbs = int(
+        input("How many target databases do you want to compare against source?\t")
+    )
 
     target_db_dic = {}
     print("Enter details for target databases:\n")
     for i in num_of_target_dbs:
-        target_db_dic[i]['Server'] = input(f"Enter Server Address for target database number {i}:\t")
-        target_db_dic[i]['Database'] = input(f"Enter Database Name for target database number {i}:\t")
-        target_db_dic[i]['Username'] = input(f"Enter Username for target database number {i}:\t")
-        target_db_dic[i]['Password'] = input(f"Enter Password for target database number {i}:\t")
+        target_db_dic[i]["Server"] = input(
+            f"Enter Server Address for target database number {i}:\t"
+        )
+        target_db_dic[i]["Database"] = input(
+            f"Enter Database Name for target database number {i}:\t"
+        )
+        target_db_dic[i]["Username"] = input(
+            f"Enter Username for target database number {i}:\t"
+        )
+        target_db_dic[i]["Password"] = input(
+            f"Enter Password for target database number {i}:\t"
+        )
 
     # print(target_db_dic)
-
 
     # try:
     #     sp_data = []
@@ -612,13 +630,12 @@ def app2_2__():
     # except Exception as e:
     #     print(f"An unexpected error occurred: {str(e)}")
 
+
 ## APP 2_2()
+
 
 def app2_2():
     pass
-
-
-
 
 
 def app2_1():
@@ -927,7 +944,9 @@ def app3():
     )
 
     nltk.download("words", quiet=True)
-    nltk.download("punkt", quiet=True)  # No output should be thrown on terminal when downloading
+    nltk.download(
+        "punkt", quiet=True
+    )  # No output should be thrown on terminal when downloading
     nltk.download("words", quiet=True)
     for sql_file in os.listdir(folder1_path):  # Path of source will be passed here
         if sql_file.endswith(".sql"):
