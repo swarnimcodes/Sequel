@@ -24,6 +24,7 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
+
 # trying to implement pyodbc connection function just once to simplify codebase
 def connection(server, database, username, password):
     # return cursor
@@ -57,7 +58,7 @@ def fetch_schema(server, database, username, password):
 
         print("\nExecuting the schema query. Please wait...\n")
         cursor.execute(schema_query)
-        print("Schema query execution" + GREEN +  " completed" + RESET + ".\n")
+        print("Schema query execution" + GREEN + " completed" + RESET + ".\n")
         rows = cursor.fetchall()
 
         for row in rows:
@@ -85,7 +86,9 @@ def fetch_schema(server, database, username, password):
     except pyodbc.Error as e:
         raise Exception(RED + "Error " + RESET + f"while fetching schema: {str(e)}")
     except Exception as ex:
-        raise Exception("An" + RED + " unexpected error " + RESET +  f"occurred: {str(ex)}")
+        raise Exception(
+            "An" + RED + " unexpected error " + RESET + f"occurred: {str(ex)}"
+        )
 
 
 def generate_excel_report(workbook, source_schema, target_schema, target_db_name):
@@ -168,8 +171,10 @@ def perform_schema_comparison(source_schema, target_schema):
 
     return comparison_results
 
+
 # TODO: Add color for target db entries
 # TODO: Add summary at the end of completion
+
 
 def app1():
     try:
@@ -181,10 +186,14 @@ def app1():
             "password": "pwd",
         }
 
-        source_info["server"] = input("Enter" + GREEN + " Server " + RESET +  "Address:\t")
-        source_info["database"] = input("Enter" + GREEN +  " Database " + RESET + "Name:\t")
+        source_info["server"] = input(
+            "Enter" + GREEN + " Server " + RESET + "Address:\t"
+        )
+        source_info["database"] = input(
+            "Enter" + GREEN + " Database " + RESET + "Name:\t"
+        )
         source_info["username"] = input("Enter Server" + GREEN + " Username:\t" + RESET)
-        source_info["password"] = input("Enter Server" + GREEN +  " Password:\t" + RESET)
+        source_info["password"] = input("Enter Server" + GREEN + " Password:\t" + RESET)
 
         source_server = source_info["server"]
         source_database = source_info["database"]
@@ -198,7 +207,11 @@ def app1():
             or not source_password
         ):
             raise ValueError(
-                    "Source database details are" + RED + " incomplete" + RESET + ". Please provide all required information."
+                "Source database details are"
+                + RED
+                + " incomplete"
+                + RESET
+                + ". Please provide all required information."
             )
 
         print("Fetching Source Information... \n")
@@ -209,17 +222,32 @@ def app1():
             )  # has information regarding source schema
         except Exception as e:
             raise ValueError(
-                f"Couldn't fetch source schema. Perhaps the" + RED + " login details " + RESET + "or" + RED + " database details " + RESET + "you entered are incorrect?\n"
+                f"Couldn't fetch source schema. Perhaps the"
+                + RED
+                + " login details "
+                + RESET
+                + "or"
+                + RED
+                + " database details "
+                + RESET
+                + "you entered are incorrect?\n"
             )
 
         # Create a single workbook outside the loop
         workbook = openpyxl.Workbook()
 
         try:
-            number_of_target_db = input("How many databases do you want to compare against source? \t")
+            number_of_target_db = input(
+                "How many databases do you want to compare against source? \t"
+            )
             number_of_target_db = int(number_of_target_db)
         except Exception as e:
-            print(RED + "Error: " + RESET + "No input or incorrect form of input was provided.")
+            print(
+                RED
+                + "Error: "
+                + RESET
+                + "No input or incorrect form of input was provided."
+            )
             return
 
         nested_target_dbs = {}
@@ -233,16 +261,32 @@ def app1():
             # Initialize the nested dictionary for the current target DB number
             nested_target_dbs[target_db_number] = {}
             nested_target_dbs[target_db_number]["server"] = input(
-                f"\nEnter" + GREEN + " Server Address " + RESET + f"for Target DB number {target_db_number}: "
+                f"\nEnter"
+                + GREEN
+                + " Server Address "
+                + RESET
+                + f"for Target DB number {target_db_number}: "
             )
             nested_target_dbs[target_db_number]["database"] = input(
-                f"Enter" + GREEN + " Database Name " + RESET + f"for Target DB number {target_db_number}: "
+                f"Enter"
+                + GREEN
+                + " Database Name "
+                + RESET
+                + f"for Target DB number {target_db_number}: "
             )
             nested_target_dbs[target_db_number]["username"] = input(
-                f"Enter" + GREEN + " User Name " + RESET + f"for Target DB number {target_db_number}: "
+                f"Enter"
+                + GREEN
+                + " User Name "
+                + RESET
+                + f"for Target DB number {target_db_number}: "
             )
             nested_target_dbs[target_db_number]["password"] = input(
-                f"Enter" + GREEN + " Password " + RESET + f"for Target DB number {target_db_number}: "
+                f"Enter"
+                + GREEN
+                + " Password "
+                + RESET
+                + f"for Target DB number {target_db_number}: "
             )
 
             target_server = nested_target_dbs[target_db_number]["server"]
@@ -257,7 +301,11 @@ def app1():
                 or not target_password
             ):
                 print(
-                    f"Target database number {target_db_number}'s details are" + RED +  " incomplete" + RESET + ". Skipping comparison for this target."
+                    f"Target database number {target_db_number}'s details are"
+                    + RED
+                    + " incomplete"
+                    + RESET
+                    + ". Skipping comparison for this target."
                 )
             else:
                 try:
@@ -282,7 +330,11 @@ def app1():
         workbook.remove(workbook.active)
         workbook.save(excel_file_name)
         print(
-            f"\nExcel file" + GREEN + " successfully " + RESET + f"created at {os.path.abspath(excel_file_name)}\n\n"
+            f"\nExcel file"
+            + GREEN
+            + " successfully "
+            + RESET
+            + f"created at {os.path.abspath(excel_file_name)}\n\n"
         )
 
         summary = {}
@@ -309,21 +361,24 @@ def app1():
             summary[sheet_name] = {
                 "Missing Columns": missing_columns,
                 "Different Specifications": different_specifications,
-                "Total Differences": total_differences
+                "Total Differences": total_differences,
             }
 
         excel_file.close()
-
 
         print(YELLOW + "Summary: \n" + RESET)
 
         for target_db, target_summary in summary.items():
             print(YELLOW + "\nTarget Database: " + RESET + f"{target_db}")
             print(f"Missing Columns: {target_summary['Missing Columns']}")
-            print(f"Different Specifications: {target_summary['Different Specifications']}")
+            print(
+                f"Different Specifications: {target_summary['Different Specifications']}"
+            )
             print(f"Total Differences: {target_summary['Total Differences']}\n")
 
-        print(f"\nNumber of databases compared against source: {number_of_target_db_copy}")
+        print(
+            f"\nNumber of databases compared against source: {number_of_target_db_copy}"
+        )
         os.system(f'explorer /select,"{os.path.abspath(excel_file_name)}"')
         input("\n\nPress Enter to exit...")
     except ValueError as ve:
@@ -400,38 +455,79 @@ def difference(source_sql_path, test_sql_path) -> bool:
 def app2():
     try:
         print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
-        source_db_dir = input("Enter the Source Database" + GREEN + " directory location" + RESET + ":\t")
+        source_db_dir = input(
+            "Enter the Source Database" + GREEN + " directory location" + RESET + ":\t"
+        )
         print("\n")
 
         if not source_db_dir.strip():
-            print(RED + "Error: " + RESET + "No source database provided. Exiting the program...\n\n")
+            print(
+                RED
+                + "Error: "
+                + RESET
+                + "No source database provided. Exiting the program...\n\n"
+            )
             sys.exit(1)
 
         if not os.path.isdir(source_db_dir):
-            raise ValueError(f"Error: The directory '{source_db_dir}' does not exist or is invalid.\n\n")
+            raise ValueError(
+                f"Error: The directory '{source_db_dir}' does not exist or is invalid.\n\n"
+            )
 
-        num_target_dbs = input("Enter" + GREEN + " number of Target Databases " + RESET + "you want to compare:\t")
+        num_target_dbs = input(
+            "Enter"
+            + GREEN
+            + " number of Target Databases "
+            + RESET
+            + "you want to compare:\t"
+        )
 
         if not num_target_dbs:
-            print(RED + "\n\nError: " + RESET + "No input provided. Exiting the program...\n\n")
+            print(
+                RED
+                + "\n\nError: "
+                + RESET
+                + "No input provided. Exiting the program...\n\n"
+            )
             sys.exit(1)
 
         try:
             num_target_dbs = int(num_target_dbs)
         except ValueError:
-            print(RED + "\n\nError: " + RESET +"Invalid input. Please enter a valid positive integer.\n\n")
+            print(
+                RED
+                + "\n\nError: "
+                + RESET
+                + "Invalid input. Please enter a valid positive integer.\n\n"
+            )
             sys.exit(1)
 
         target_db_dirs = []
 
         for i in range(num_target_dbs):
             while True:
-                target_db_dir = input("\nEnter " + GREEN + "target database directory location " + RESET + f"for target database number {i+1}:\t")
+                target_db_dir = input(
+                    "\nEnter "
+                    + GREEN
+                    + "target database directory location "
+                    + RESET
+                    + f"for target database number {i+1}:\t"
+                )
 
                 if not target_db_dir.strip():
-                    print(RED + "Error: " + RESET + "No input provided. Please enter a directory location.\n")
+                    print(
+                        RED
+                        + "Error: "
+                        + RESET
+                        + "No input provided. Please enter a directory location.\n"
+                    )
                 elif not os.path.exists(target_db_dir):
-                    print(RED + "Error: " + RESET + f"The directory '{target_db_dir}' does not exist or is invalid. Please enter a valid directory location.\n")
+                    print(
+                        RED
+                        + "Error: "
+                        + RESET
+                        + f"The directory '{target_db_dir}' does not exist or is invalid. Please enter a valid directory location.\n"
+                    )
                 else:
                     target_db_dirs.append(target_db_dir)
                     break  # Valid input, exit the loop
@@ -447,7 +543,7 @@ def app2():
             summary[target_db_dir] = {
                 "Absent Entries": 0,
                 "Present & Unequal Entries": 0,
-                "Present & Equal Entries": 0
+                "Present & Equal Entries": 0,
             }
 
         for sql_file in source_sql_file_list:
@@ -472,7 +568,6 @@ def app2():
 
         df = pd.DataFrame(sp_data)
 
-
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
         output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
         df.to_excel(output_excel_path, index=False)
@@ -481,7 +576,9 @@ def app2():
         ws = wb.active
 
         # Apply cell coloring based on the cell values
-        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column):
+        for row in ws.iter_rows(
+            min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
+        ):
             for cell in row:
                 if cell.value == "PRESENT & UNEQUAL":
                     cell.fill = PatternFill(
@@ -498,20 +595,38 @@ def app2():
         # Print the summary for each target database
         print(YELLOW + "\n\nSummary:\n\n" + RESET)
         for target_db_dir, summary_data in summary.items():
-            print(YELLOW + "\nTarget Database: " + RESET + GREEN + f"{os.path.basename(target_db_dir)}" + RESET)
+            print(
+                YELLOW
+                + "\nTarget Database: "
+                + RESET
+                + GREEN
+                + f"{os.path.basename(target_db_dir)}"
+                + RESET
+            )
             print(f"Absent Entries: {summary_data['Absent Entries']}")
-            print(f"Present & Unequal Entries: {summary_data['Present & Unequal Entries']}")
+            print(
+                f"Present & Unequal Entries: {summary_data['Present & Unequal Entries']}"
+            )
             print(f"Present & Equal Entries: {summary_data['Present & Equal Entries']}")
-            print(f"Total Entries Scanned Against Source: {summary_data['Absent Entries']+summary_data['Present & Unequal Entries']+summary_data['Present & Equal Entries']}")
+            print(
+                f"Total Entries Scanned Against Source: {summary_data['Absent Entries']+summary_data['Present & Unequal Entries']+summary_data['Present & Equal Entries']}"
+            )
             print("\n")
 
         excel_absolute_path = os.path.abspath(output_excel_path)
-        print(GREEN + "\nSuccess: " + RESET + f"Excel Report has been generated at {excel_absolute_path}\n")
+        print(
+            GREEN
+            + "\nSuccess: "
+            + RESET
+            + f"Excel Report has been generated at {excel_absolute_path}\n"
+        )
         os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
         input("Press Enter to exit...")
 
     except Exception as e:
         print(f"An unexpected error occurred: {str(e)}")
+
+
 # END OF APP 2 #########################################################################
 
 
@@ -562,20 +677,23 @@ def generate_html_diff(file1_contents, file2_contents, folder1_path, folder2_pat
 
 
 def app3():
-    print("app3\n")
     comparison_results = []
 
-    # No need for this. store the diffs in a folder from where the program is run
-    output_dir = input(
-        "Enter the location of directory where you want to store the DIFF HTML files: \n"
-    )
-    excel_output_file = input("Name the excel file: ")
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    excel_output_file = f"SP_Comparison_Repost__{timestamp}.xlsx"
+
+    output_dir = f"Diff_Files_{timestamp}"
+    os.makedirs(output_dir, exist_ok=True)
 
     # Source Database
-    folder1_path = input("Enter location of the SOURCE database directory: \n")
+    folder1_path = input(
+        "Enter location of the" + GREEN + " Source " + RESET + "database directory: \t"
+    )
 
     # Database to compare with source
-    folder2_path = input("Enter location of the TARGET database directory: \n")
+    folder2_path = input(
+        "Enter location of the" + GREEN + " Target " + RESET + "database directory: \t"
+    )
 
     # Define cell fill colors
     different_color = PatternFill(
@@ -585,8 +703,10 @@ def app3():
         start_color="ffd6ca", end_color="ffd6ca", fill_type="solid"
     )
 
-    nltk.download("punkt")  # No output should be thrown on terminal when downloading
-    nltk.download("words")
+    nltk.download(
+        "punkt", quiet=True
+    )  # No output should be thrown on terminal when downloading
+    nltk.download("words", quiet=True)
     for sql_file in os.listdir(folder1_path):  # Path of source will be passed here
         if sql_file.endswith(".sql"):
             file1_path = os.path.join(folder1_path, sql_file)
@@ -610,10 +730,10 @@ def app3():
 
                 if file1_nocomments == file2_nocomments:
                     content_comparison = "Equal"
-                    print(f"Files {sql_file} are equal")
+                    # print(f"Files {sql_file} are equal")
                 else:
                     content_comparison = "Different"
-                    print(f"Files {sql_file} are unequal")
+                    # print(f"Files {sql_file} are unequal")
                     diff_html = generate_html_diff(
                         file1_contents, file2_contents, folder1_path, folder2_path
                     )
@@ -638,20 +758,6 @@ def app3():
                     diff_file,
                 ]
             )
-    #
-    # df = pd.DataFrame(
-    #     comparison_results,
-    #     columns=[
-    #         "SP Name",
-    #         f"Present in {os.path.dirname(folder1_path)}",
-    #         f"Present in {os.path.dirname(folder2_path)}",
-    #         "Content Comparison",
-    #         "Diff File",
-    #     ],
-    # )
-    # df.to_excel(excel_output_file, index=False)
-    # os.system(f'start excel "{excel_output_file}"')
-
     # Create a new Excel workbook and add a worksheet
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -683,8 +789,12 @@ def app3():
 
     # Save the workbook
     wb.save(excel_output_file)
+    print(YELLOW + "\n\nSummary:\n" + RESET)
+    print("Total files scanned: {}")
+    print(f"Diff Files are stored in {os.path.abspath(output_dir)}")
+    print(f"Excel file generated and stored in {os.path.abspath(excel_output_file)}")
     # Open the folder insted of the excel file
-    os.system(f'start excel "{excel_output_file}"')
+    os.system(f'explorer /select, "{os.path.abspath(excel_output_file)}"')
 
 
 # END OF APP 3 #########################################################################
@@ -748,8 +858,12 @@ def main():
             + RESET
             + "Compare Stored Procedures between two databases on your system, generate Excel reports, and store differential files in HTML format for visualizing differences\n"
         )
-        print(YELLOW + "4: UTF-16 to UTF-8 File Converter: " + RESET +
-              "Convert UTF-16 files to UTF-8 files\n")
+        print(
+            YELLOW
+            + "4: UTF-16 to UTF-8 File Converter: "
+            + RESET
+            + "Convert UTF-16 files to UTF-8 files\n"
+        )
         choice = int(input("Enter your choice: \t"))
         print(f"You have selected option: {choice}.\n")
 
@@ -762,13 +876,14 @@ def main():
         elif choice == 4:
             app4()
         else:
-            print("Please select a valid choice from 1 to 4")
+            print(
+                RED + "Error: " + RESET + "Please select a valid choice from 1 to 4\n"
+            )
     except ValueError:
-        print("Please enter a valid numeric choice.")
+        print(RED + "\nError: " + RESET + "Please enter a valid numeric choice.\n")
     except Exception as e:
         print(f"Error occurred: {str(e)}")
 
-        # TODO: Wait for user to press a key to exit
 
 if __name__ == "__main__":
     main()
