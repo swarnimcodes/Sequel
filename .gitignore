@@ -1,3 +1,7 @@
 .venv
 *.xlsx
 *.txt
+*Diff_Files*/
+testsql
+*_pycache_*/
+*details.txt*

@@ -27,12 +27,6 @@ YELLOW = "\033[93m"
 RESET = "\033[0m"
 
 
-# trying to implement pyodbc connection function just once to simplify codebase
-def connection(server, database, username, password):
-    # return cursor
-    return
-
-
 def fetch_schema(server, database, username, password):
     schema_info = {}
 
@@ -172,10 +166,6 @@ def perform_schema_comparison(source_schema, target_schema):
                     comparison_results.append(comparison_result)
 
     return comparison_results
-
-
-# TODO: Add color for target db entries
-# TODO: Add summary at the end of completion
 
 
 def app1():
@@ -440,21 +430,19 @@ def strip_comments(sql_file_contents):
 
 def difference(source_sql_path, test_sql_path) -> bool:
     try:
-
         try:
-            with open(source_sql_path, 'r', encoding='utf-8') as file:
+            with open(source_sql_path, "r", encoding="utf-8") as file:
                 source_contents = file.read().upper()
         except UnicodeError:
-            with open(source_sql_path, 'r', encoding='utf-16') as file:
+            with open(source_sql_path, "r", encoding="utf-16") as file:
                 source_contents = file.read().upper()
 
         try:
-            with open(test_sql_path, 'r', encoding='utf-8') as file:
+            with open(test_sql_path, "r", encoding="utf-8") as file:
                 test_contents = file.read().upper()
         except UnicodeError:
-            with open(test_sql_path, 'r', encoding='utf-16') as file:
+            with open(test_sql_path, "r", encoding="utf-16") as file:
                 test_contents = file.read().upper()
-
 
         stripped_sql_file_source = strip_comments(source_contents)
         stripped_sql_file_test = strip_comments(test_contents)
@@ -467,42 +455,271 @@ def difference(source_sql_path, test_sql_path) -> bool:
     except Exception as e:
         print(f"Error while comparing SQL Files: {str(e)}")
 
-
-
-def read_sql_files_neutrally(sql_dir):
-    sql_contents = {}  # Dictionary to store SQL file contents
-
+def download_stored_procedure(server, database, username, password, sp_name, output_file_path):
     try:
-        # Check if the SQL directory exists
-        if not os.path.exists(sql_dir):
-            print(f"Directory '{sql_dir}' not found.")
-            return sql_contents
+        # Establish a connection to the SQL Server
+        connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
+        connection = pyodbc.connect(connection_string)
+        cursor = connection.cursor()
 
-        # List all files in the directory
-        files = os.listdir(sql_dir)
+        # Define a query to fetch the stored procedure text
+        query = f"EXEC sp_helptext '{sp_name}'"
 
-        # Loop through each file
-        for file_name in files:
-            # Check if the file has a .sql extension
-            if file_name.endswith('.sql'):
-                file_path = os.path.join(sql_dir, file_name)
+        # Execute the query to fetch the stored procedure text
+        cursor.execute(query)
 
-                # Detect the file's encoding using chardet
-                with open(file_path, 'rb') as binary_file:
-                    encoding_info = chardet.detect(binary_file.read())
-                    detected_encoding = encoding_info['encoding']
+        # Fetch all lines of the stored procedure
+        stored_procedure_text = "\n".join([row[0] for row in cursor.fetchall()])
 
-                # Open the file with the detected encoding
-                with codecs.open(file_path, 'r', detected_encoding) as sql_file:
-                    sql_contents[file_name] = sql_file.read()
+        # Write the stored procedure text to the output file
+        with open(output_file_path, 'w', encoding='utf-8') as output_file:
+            output_file.write(stored_procedure_text)
 
+        print(f"Stored procedure '{sp_name}' downloaded to '{output_file_path}'.")
+
+        # Close the connection
+        connection.close()
+
+    except pyodbc.Error as e:
+        print(f"Error: {str(e)}")
     except Exception as e:
-        print(f"Error while reading SQL files: {str(e)}")
-
-    return sql_contents
+        print(f"An unexpected error occurred: {str(e)}")
 
 
-def app2():
+def app2_2__():
+
+    print("Enter Source Database Details:")
+    source_server = input("Enter server address:\t")
+    source_database = input("Enter database name:\t")
+    source_username = input("Enter username:\t")
+    source_password = input("Enter password:\t")
+
+    source_stored_procedures = fetch_stored_procedures(source_server, source_database, source_username, source_password)
+
+    print(source_stored_procedures)
+
+    # print("\n\n")
+
+    for i in range(len(source_stored_procedures)):
+        output_file_path = f"C:\\Users\\swarn\\github\\Sequel\\testsql\\{source_stored_procedures[i]}"
+        sqlfile = download_stored_procedure(source_server, source_database, source_username, source_password, source_stored_procedures[i], output_file_path)
+        print("\n\n")
+        print(sqlfile)
+
+
+    num_of_target_dbs = int(input("How many target databases do you want to compare against source?\t"))
+
+    target_db_dic = {}
+    print("Enter details for target databases:\n")
+    for i in num_of_target_dbs:
+        target_db_dic[i]['Server'] = input(f"Enter Server Address for target database number {i}:\t")
+        target_db_dic[i]['Database'] = input(f"Enter Database Name for target database number {i}:\t")
+        target_db_dic[i]['Username'] = input(f"Enter Username for target database number {i}:\t")
+        target_db_dic[i]['Password'] = input(f"Enter Password for target database number {i}:\t")
+
+    # print(target_db_dic)
+
+
+    # try:
+    #     sp_data = []
+    #     summary = {}
+
+    #     for target_db_dir in target_db_dirs:
+    #         summary[target_db_dir] = {
+    #             "Absent Entries": 0,
+    #             "Present & Unequal Entries": 0,
+    #             "Present & Equal Entries": 0,
+    #         }
+
+    #     for sp_name in stored_procedures:
+    #         sp_info = {"SP Name": sp_name}
+    #         source_sql_path = (
+    #             f"online_db_{sp_name}.sql"  # You can customize the filename as needed
+    #         )
+
+    #         for target_db_dir in target_db_dirs:
+    #             target_sql_path = os.path.join(target_db_dir, f"{sp_name}.sql")
+    #             if os.path.exists(target_sql_path):
+    #                 if difference(source_sql_path, target_sql_path):
+    #                     sp_info[os.path.basename(target_db_dir)] = "PRESENT & EQUAL"
+    #                     summary[target_db_dir]["Present & Equal Entries"] += 1
+    #                 else:
+    #                     sp_info[os.path.basename(target_db_dir)] = "PRESENT & UNEQUAL"
+    #                     summary[target_db_dir]["Present & Unequal Entries"] += 1
+    #             else:
+    #                 sp_info[os.path.basename(target_db_dir)] = "ABSENT"
+    #                 summary[target_db_dir]["Absent Entries"] += 1
+
+    #         sp_data.append(sp_info)
+
+    #     df = pd.DataFrame(sp_data)
+
+    #     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    #     output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
+    #     df.to_excel(output_excel_path, index=False)
+    #     # Load the existing workbook and sheet
+    #     wb = load_workbook(output_excel_path)
+    #     ws = wb.active
+
+    #     # Apply cell coloring based on the cell values
+    #     for row in ws.iter_rows(
+    #         min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
+    #     ):
+    #         for cell in row:
+    #             if cell.value == "PRESENT & UNEQUAL":
+    #                 cell.fill = PatternFill(
+    #                     start_color="FCD5B4", end_color="FCD5B4", fill_type="solid"
+    #                 )
+    #             elif cell.value == "ABSENT":
+    #                 cell.fill = PatternFill(
+    #                     start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
+    #                 )
+
+    #     # Save the modified workbook
+    #     wb.save(output_excel_path)
+
+    #     # Print the summary for each target database
+    #     print(YELLOW + "\n\nSummary:\n\n" + RESET)
+    #     for target_db_dir, summary_data in summary.items():
+    #         print(
+    #             YELLOW
+    #             + "\nTarget Database: "
+    #             + RESET
+    #             + GREEN
+    #             + f"{os.path.basename(target_db_dir)}"
+    #             + RESET
+    #         )
+    #         print(f"Absent Entries: {summary_data['Absent Entries']}")
+    #         print(
+    #             f"Present & Unequal Entries: {summary_data['Present & Unequal Entries']}"
+    #         )
+    #         print(f"Present & Equal Entries: {summary_data['Present & Equal Entries']}")
+    #         print(
+    #             f"Total Entries Scanned Against Source: {summary_data['Absent Entries']+summary_data['Present & Unequal Entries']+summary_data['Present & Equal Entries']}"
+    #         )
+    #         print("\n")
+
+    #     excel_absolute_path = os.path.abspath(output_excel_path)
+    #     print(
+    #         GREEN
+    #         + "\nSuccess: "
+    #         + RESET
+    #         + f"Excel Report has been generated at {excel_absolute_path}\n"
+    #     )
+    #     os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
+    #     input("Press Enter to exit...")
+
+    # except Exception as e:
+    #     print(f"An unexpected error occurred: {str(e)}")
+
+
+
+
+
+def get_stored_procedures(cursor):
+    cursor.execute("SELECT name FROM sys.procedures WHERE type_desc = 'SQL_STORED_PROCEDURE'")
+    return [row.name for row in cursor.fetchall()]
+
+def get_stored_procedure_definition(cursor, procedure_name):
+    cursor.execute(f"EXEC sp_helptext '{procedure_name}'")
+    rows = cursor.fetchall()
+    definition = "".join([row[0] for row in rows])
+    return definition
+
+def compare_stored_procedures(source_conn, target_connections):
+    source_cursor = source_conn.cursor()
+
+    source_procedures = get_stored_procedures(source_cursor)
+
+    comparison_data = []
+
+    for target_conn in target_connections:
+        target_cursor = target_conn.cursor()
+        target_procedures = get_stored_procedures(target_cursor)
+
+        # Extract the server name (SQL Server instance name) from the connection string
+        target_conn_str = target_conn.getinfo(pyodbc.SQL_DATA_SOURCE_NAME)
+        print(f"Comparing with Target Database: {target_conn_str}")
+
+        comparison_result = {}
+
+        for procedure_name in source_procedures:
+            source_definition = get_stored_procedure_definition(source_cursor, procedure_name)
+
+            if procedure_name in target_procedures:
+                target_definition = get_stored_procedure_definition(target_cursor, procedure_name)
+
+                if source_definition == target_definition:
+                    comparison_result[procedure_name] = "Identical"
+                else:
+                    comparison_result[procedure_name] = "Different"
+            else:
+                comparison_result[procedure_name] = "Absent"
+
+        comparison_result["Target Database Name"] = target_conn_str  # Add target database name
+        comparison_data.append(comparison_result)
+
+    return comparison_data
+
+def store_comparison_report(comparison_data, source_db_name, source_procedures):
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    excel_filename = f"SP_Comparison_Report_{timestamp}.xlsx"
+
+    # Create a DataFrame from the comparison data
+    df = pd.DataFrame(comparison_data)
+
+    # Add a column for source database name
+    df["Source Database Name"] = source_db_name
+
+    # Specify the column order
+    cols = ["Source Database Name", "Target Database Name"] + source_procedures
+
+    # Reorder columns
+    df = df[cols]
+
+    # Save the DataFrame to an Excel file
+    df.to_excel(excel_filename, index=False)
+
+    print(f"Comparison report has been saved to: {excel_filename}")
+
+def app2_2():
+    # Connect to the source database
+    source_server = "172.16.0.28"
+    source_db = "DB_PRMITR_ERP_20230701"
+    source_user = "Swarnim_Intern"
+    source_password = "Swarnim14#"
+    source_connection_string = f"DRIVER=SQL Server;SERVER={source_server};DATABASE={source_db};UID={source_user};PWD={source_password}"
+
+    source_conn = pyodbc.connect(source_connection_string)
+
+    # Allow the user to enter multiple target database connection strings
+    target_connection_strings = []
+
+    num_targets = int(input("Enter the number of target databases: "))
+    for i in range(num_targets):
+        conn_string = input(f"Enter connection string for target database {i + 1}: ")
+        target_connection_strings.append(conn_string)
+
+    target_connections = [pyodbc.connect(conn_string) for conn_string in target_connection_strings]
+
+    # Get the source database name
+    source_db_name = source_db
+
+    # Compare stored procedures
+    comparison_data = compare_stored_procedures(source_conn, target_connections)
+
+    # Close database connections
+    source_conn.close()
+    for conn in target_connections:
+        conn.close()
+
+    # Store the comparison report
+    store_comparison_report(comparison_data, source_db_name, get_stored_procedures(source_conn))
+
+
+
+
+def app2_1():
     try:
         print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
         source_db_dir = input(
@@ -681,6 +898,22 @@ def app2():
         print(f"An unexpected error occurred: {str(e)}")
 
 
+def app2():
+    online = input(
+        "Do you want to carry out the SP comparison for online databases or offline stored database directories?\nEnter 1 for offline\nEnter 2 for online\nYour choice:\t\t"
+    ).strip()
+    online = int(online)
+
+    match online:
+        case 1:
+            app2_1()
+        case 2:
+            app2_2()
+        case _:
+            print("Invalid choice. Exiting...")
+            sys.exit(1)
+
+
 # END OF APP 2 #########################################################################
 
 
@@ -808,11 +1041,22 @@ def app3():
             diff_file = ""
 
             if present_in_folder1 and present_in_folder2:
-                file1_contents = open(file1_path, "r").read().upper()
+                try:
+                    with open(file1_path, "r", encoding="utf-8") as file:
+                        file1_contents = file.read().upper()
+                except UnicodeError:
+                    with open(file1_path, "r", encoding="utf-16") as file:
+                        file1_contents = file.read().upper()
                 normalized_sql_1 = normalize_sql(file1_contents)
                 file1_nocomments = strip_sql_comments(normalized_sql_1)
 
-                file2_contents = open(file2_path, "r").read().upper()
+                try:
+                    with open(file2_path, "r", encoding="utf-8") as file:
+                        file2_contents = file.read().upper()
+                except UnicodeError:
+                    with open(file2_path, "r", encoding="utf-16") as file:
+                        file2_contents = file.read().upper()
+
                 normalized_sql_2 = normalize_sql(file2_contents)
                 file2_nocomments = strip_sql_comments(normalized_sql_2)
 
@@ -904,61 +1148,7 @@ def app3():
     # Open the folder insted of the excel file
     os.system(f'explorer /select, "{os.path.abspath(excel_output_file)}"')
 
-
-# END OF APP 3 #########################################################################
-
-# Convert all sql files to utf-8 by default and remove app 4
-
-
-def is_utf8(file_path):
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            file.read()
-        return True
-    except UnicodeDecodeError:
-        return False
-
-
-def convert_utf16_to_utf8(input_file_path, output_file_path):
-    try:
-        with open(input_file_path, "r", encoding="utf-16") as utf16_file:
-            utf16_content = utf16_file.read()
-
-        with open(output_file_path, "w", encoding="utf-8") as utf8_file:
-            utf8_file.write(utf16_content)
-
-        print(f"Conversion successful: {input_file_path} -> {output_file_path}")
-    except FileNotFoundError:
-        print(f"File not found: {input_file_path}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-
-def batch_convert_utf16_to_utf8(input_dir, output_dir):
-    os.makedirs(output_dir, exist_ok=True)
-    input_files = [f for f in os.listdir(input_dir)]
-
-    for input_file in input_files:
-        input_file_path = os.path.join(input_dir, input_file)
-        output_file_path = os.path.join(output_dir, input_file)
-        convert_utf16_to_utf8(input_file_path, output_file_path)
-
-
-def app4():
-    input_dir = input("Enter directory with utf-16 files: \n")
-    output_dir = input("Enter directory where you want to store the utf-8 files: \n")
-
-    batch_convert_utf16_to_utf8(input_dir, output_dir)
-
-
-# END OF APP 4 #########################################################################
-
-
-def app5():
-    pass
-
-
-# END OF APP 5 ######################################
+    # END OF APP 3 #########################################################################
 
 
 def main():
@@ -982,12 +1172,7 @@ def main():
             + RESET
             + "Compare Stored Procedures between two databases on your system, generate Excel reports, and store differential files in HTML format for visualizing differences\n"
         )
-        print(
-            YELLOW
-            + "4: UTF-16 to UTF-8 File Converter: "
-            + RESET
-            + "Convert UTF-16 files to UTF-8 files\n"
-        )
+
         choice = int(input("Enter your choice: \t"))
         print(f"You have selected option: {choice}.\n")
 
@@ -997,8 +1182,6 @@ def main():
             app2()
         elif choice == 3:
             app3()
-        elif choice == 4:
-            app4()
         else:
             print(
                 RED + "Error: " + RESET + "Please select a valid choice from 1 to 4\n"
