@@ -465,14 +465,18 @@ def app2():
                 RED
                 + "Error: "
                 + RESET
-                + "No source database provided. Exiting the program...\n\n"
+                + "No source database provided. Exiting program...\n\n"
             )
             sys.exit(1)
 
         if not os.path.isdir(source_db_dir):
-            raise ValueError(
-                f"Error: The directory '{source_db_dir}' does not exist or is invalid.\n\n"
+            print(
+                RED
+                + "Error: "
+                + RESET
+                + f"Directory '{source_db_dir}' is invalid. Exiting program..."
             )
+            sys.exit(1)
 
         num_target_dbs = input(
             "Enter"
@@ -689,11 +693,45 @@ def app3():
     folder1_path = input(
         "Enter location of the" + GREEN + " Source " + RESET + "database directory: \t"
     )
+    if not folder1_path.strip():
+        print(
+            RED
+            + "\nError: "
+            + RESET
+            + "No source database provided. Exiting program...\n"
+        )
+        sys.exit(1)
+
+    if not os.path.isdir(folder1_path):
+        print(
+            RED
+            + "\nError: "
+            + RESET
+            + f"The directory '{folder1_path}' is invalid. Exiting program...\n"
+        )
+        sys.exit(1)
 
     # Database to compare with source
     folder2_path = input(
         "Enter location of the" + GREEN + " Target " + RESET + "database directory: \t"
     )
+    if not folder2_path.strip():
+        print(
+            RED
+            + "\nError: "
+            + RESET
+            + "No source database provided. Exiting program...\n"
+        )
+        sys.exit(1)
+
+    if not os.path.isdir(folder2_path):
+        print(
+            RED
+            + "Error: "
+            + RESET
+            + f"The directory '{folder1_path}' is invalid. Exiting program...\n"
+        )
+        sys.exit(1)
 
     # Define cell fill colors
     different_color = PatternFill(
@@ -787,12 +825,18 @@ def app3():
         if row[2].value == False:
             row[2].fill = missing_color
 
+    num_files_absent = sum(not row[2] for row in comparison_results)
+    num_files_different = sum(row[3] == "Different" for row in comparison_results)
+    total_files_scanned = len(comparison_results)
+
     # Save the workbook
     wb.save(excel_output_file)
-    print(YELLOW + "\n\nSummary:\n" + RESET)
-    print("Total files scanned: {}")
+    print(YELLOW + "\n\nSummary: " + RESET)
+    print("Number of files" + RED + " Absent " + RESET + f"in Target Database: {num_files_absent}")
+    print("Number of files with" + RED + " Unequal Content " + RESET + f"in Target Database: {num_files_different}")
+    print(f"Total files scanned: {total_files_scanned}\n\n")
     print(f"Diff Files are stored in {os.path.abspath(output_dir)}")
-    print(f"Excel file generated and stored in {os.path.abspath(excel_output_file)}")
+    print(f"Excel file generated and stored in {os.path.dirname(os.path.abspath(excel_output_file))}\n\n")
     # Open the folder insted of the excel file
     os.system(f'explorer /select, "{os.path.abspath(excel_output_file)}"')
 
