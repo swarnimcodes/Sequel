@@ -429,6 +429,7 @@ def strip_comments(sql_file_contents):
 
     return stripped_sql_file
 
+
 def strip_comments_after_create(sql_file_contents):
     try:
         # Split the SQL content into lines
@@ -438,7 +439,7 @@ def strip_comments_after_create(sql_file_contents):
 
         for line in lines:
             # Check if the line contains "CREATE" (case-insensitive)
-            if not create_found and re.search(r'\bCREATE\b', line, re.IGNORECASE):
+            if not create_found and re.search(r"\bCREATE\b", line, re.IGNORECASE):
                 create_found = True
                 continue
 
@@ -451,13 +452,14 @@ def strip_comments_after_create(sql_file_contents):
                     stripped_lines.append(line)
 
         # Join the stripped lines to form the SQL content
-        stripped_sql_file = '\n'.join(stripped_lines)
+        stripped_sql_file = "\n".join(stripped_lines)
 
     except Exception as e:
         print(f"Error while stripping comments: {str(e)}")
         stripped_sql_file = ""
 
     return stripped_sql_file
+
 
 def difference_app2(source_sql_path, test_sql_path) -> bool:
     try:
@@ -512,8 +514,6 @@ def difference(source_sql_path, test_sql_path) -> bool:
         stripped_sql_file_test = strip_comments(normalized_sql_file_test)
         # stripped_sql_file_test = normalize_sql(stripped_sql_file_test)
 
-
-
         if stripped_sql_file_source == stripped_sql_file_test:
             return True
         else:
@@ -554,7 +554,6 @@ def download_stored_procedure(
         print(f"Error: {str(e)}")
     except Exception as e:
         print(f"An unexpected error occurred: {str(e)}")
-
 
 
 def app2():
@@ -645,12 +644,33 @@ def app2():
 
         # Get the list of sql file in source database
         source_sql_file_list = os.listdir(source_db_dir)
+        ignore = []
+        ignore = [
+            "*_SWAPNIL*",
+            "*_SQLQUERY*",
+            "*_MIG*",
+            "*_FARHEEN*",
+            "*_SHUBHAM*",
+            "*_CHHAGAN*",
+            "*_TCKT*",
+            "*_tblPivoPOAttainmet*",
+            "*_BK*",
+            "*_BACKUP*",
+            "*_TKT*",
+            "*_TICKET*",
+            "*_EXCEL"
+        ]
 
-        # IMPORTANT, DO NOT DELETE
         # Remove files with backup in their name (case insensitive)
-        # for file in source_sql_file_list:
-        #     if fnmatch.fnmatch(file, '*backup*'):
-        #         source_sql_file_list.remove(file)
+        for file in source_sql_file_list:
+            for ignore_word in ignore:
+                if fnmatch.fnmatch(file, ignore_word):
+                    try:
+                        if os.path.exists(file):
+                            source_sql_file_list.remove(file)
+                    except Exception as e:
+                        print(f"{str(e)}")
+                        print(f"Error {ignore_word}, {file}")
 
 
         summary = {}
@@ -938,25 +958,23 @@ def app3():
                 ]
             )
 
-
-
     # TODO: add functionality where it shows what sp is not present in which db
     for sql_file in os.listdir(folder2_path):
         sp_name = sql_file
         if sql_file.endswith(".sql"):
-            if os.path.exists(os.path.join(folder2_path, sql_file)) == True and os.path.exists(os.path.join(folder1_path, sql_file)) != True:
+            if (
+                os.path.exists(os.path.join(folder2_path, sql_file)) == True
+                and os.path.exists(os.path.join(folder1_path, sql_file)) != True
+            ):
                 print(f"{sql_file} present in target but not in source")
                 comparison_results.append(
                     [
                         sp_name,
                         os.path.exists(os.path.join(folder1_path, sql_file)),
                         os.path.exists(os.path.join(folder2_path, sql_file)),
-                        f"Missing in {os.path.basename(folder1_path)}"
+                        f"Missing in {os.path.basename(folder1_path)}",
                     ]
                 )
-
-
-
 
     # Create a new Excel workbook and add a worksheet
     wb = openpyxl.Workbook()
@@ -1020,6 +1038,7 @@ def app3():
 
     # END OF APP 3 #########################################################################
 
+
 def get_unique_list(non_unique_list):
     unique_list = []
 
@@ -1031,15 +1050,10 @@ def get_unique_list(non_unique_list):
     return unique_list
 
 
-
 def app4():
     try:
         num_target_dbs = input(
-            "Enter"
-            + GREEN
-            + " Number of Databases "
-            + RESET
-            + "you want to compare:\t"
+            "Enter" + GREEN + " Number of Databases " + RESET + "you want to compare:\t"
         )
 
         if not num_target_dbs:
@@ -1148,8 +1162,6 @@ def app4():
         print(f"An unexpected error occurred: {str(e)}")
 
 
-
-
 def main():
     try:
         print("\n\nPlease enter what program you wish to execute: \n\n")
@@ -1170,6 +1182,12 @@ def main():
             + "3. Stored Procedure Comparator + Diff Generator: "
             + RESET
             + "Compare Stored Procedures between two databases on your system, generate Excel reports, and store differential files in HTML format for visualizing differences\n"
+        )
+        print(
+            YELLOW
+            + "4. Stored Procedure Cross-Database Analyzer: "
+            + RESET
+            + "Examine the presence of stored procedures across multiple databases, ensuring their mutual existence.\n"
         )
 
         choice = int(input("Enter your choice: \t"))
@@ -1197,9 +1215,4 @@ if __name__ == "__main__":
     main()
 
 
-
-
-
 ##
-
-
