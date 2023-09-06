@@ -1278,8 +1278,10 @@ def app5():
 
         # Data
         ws.append([len(file_list), len(file_list_excl), len(excluded_files)])
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+        ex_file_name = f"Backup_File_Statistics_{timestamp}.xlsx"
 
-        wb_excl.save("Exclusion Statistics.xlsx")
+        wb_excl.save(ex_file_name)
 
     except Exception as e:
         print(f"{str(e)}")
@@ -1349,6 +1351,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-##
