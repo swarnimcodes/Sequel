@@ -159,6 +159,10 @@ def generate_excel_report(workbook, source_schema, target_schema, target_db_name
             sheet[f"D{row}"].fill = PatternFill(
                 start_color="D1D5DE", end_color="D1D5DE", fill_type="solid"
             )
+        elif result["data_type"] == "Missing Table":
+            sheet[f"D{row}"].fill = PatternFill(
+                start_color="c4d79b", end_color="c4d79b", fill_type="solid"
+            )
         row = row + 1
 
 
@@ -171,51 +175,53 @@ def perform_schema_comparison(source_schema, target_schema):
 
             if not bool(target_columns):
                 print(f"{table_name} Table Not found in target database")
-                # comparison_result = {
-                #         "schema": schema,
-                #         "table_name": table_name,
-                #         "column_name": f"Table {table_name} Not Found",
-                #         "data_type": "Missing Table",
-                #         "max_length": str(col_info_source),
-                #         "numeric_precision": "",
-                #         "numeric_scale": "",
-                # }
-
-
-            for col_info_source in source_columns:
-                col_name_source = col_info_source["column_name"]
-                col_info_target = next(
-                    (
-                        col
-                        for col in target_columns
-                        if col["column_name"] == col_name_source
-                    ),
-                    None,
-                )
-
-                if col_info_target is None:
-                    comparison_result = {
+                comparison_result = {
                         "schema": schema,
                         "table_name": table_name,
-                        "column_name": col_name_source,
-                        "data_type": "Missing Column",
+                        "column_name": f"Table {table_name} Not Found",
+                        "data_type": "Missing Table",
                         "max_length": str(col_info_source),
                         "numeric_precision": "",
                         "numeric_scale": "",
-                    }
-                    comparison_results.append(comparison_result)
+                        }
+                comparison_results.append(comparison_result)
+            else:
+                for col_info_source in source_columns:
+                    col_name_source = col_info_source["column_name"]
+                    col_info_target = next(
+                        (
+                            col
+                            for col in target_columns
+                            if col["column_name"] == col_name_source
+                        ),
+                        None,
+                    )
 
-                elif col_info_source != col_info_target:
-                    comparison_result = {
-                        "schema": schema,
-                        "table_name": table_name,
-                        "column_name": col_name_source,
-                        "data_type": "Different Specification",
-                        "max_length": str(col_info_source),
-                        "numeric_precision": str(col_info_target),
-                        "numeric_scale": "",
-                    }
-                    comparison_results.append(comparison_result)
+                    if col_info_target is None:
+                        comparison_result = {
+                            "schema": schema,
+                            "table_name": table_name,
+                            "column_name": col_name_source,
+                            "data_type": "Missing Column",
+                            "max_length": str(col_info_source),
+                            "numeric_precision": "",
+                            "numeric_scale": "",
+                        }
+                        comparison_results.append(comparison_result)
+
+                    elif col_info_source != col_info_target:
+                        comparison_result = {
+                            "schema": schema,
+                            "table_name": table_name,
+                            "column_name": col_name_source,
+                            "data_type": "Different Specification",
+                            "max_length": str(col_info_source),
+                            "numeric_precision": str(col_info_target),
+                            "numeric_scale": "",
+                        }
+                        comparison_results.append(comparison_result)
+
+
 
     return comparison_results
 
