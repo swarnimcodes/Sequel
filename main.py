@@ -432,21 +432,26 @@ def difference(source_sql_path, test_sql_path) -> bool:
     try:
         try:
             with open(source_sql_path, "r", encoding="utf-8") as file:
-                source_contents = file.read().upper()
+                source_contents = file.read().upper().strip()
         except UnicodeError:
             with open(source_sql_path, "r", encoding="utf-16") as file:
                 source_contents = file.read().upper()
 
         try:
             with open(test_sql_path, "r", encoding="utf-8") as file:
-                test_contents = file.read().upper()
+                test_contents = file.read().upper().strip()
         except UnicodeError:
             with open(test_sql_path, "r", encoding="utf-16") as file:
                 test_contents = file.read().upper()
 
         stripped_sql_file_source = strip_comments(source_contents)
+        stripped_sql_file_source = normalize_sql(stripped_sql_file_source)
+        
         stripped_sql_file_test = strip_comments(test_contents)
+        stripped_sql_file_test = normalize_sql(stripped_sql_file_test)
 
+        
+        
         if stripped_sql_file_source == stripped_sql_file_test:
             return True
         else:
@@ -455,7 +460,10 @@ def difference(source_sql_path, test_sql_path) -> bool:
     except Exception as e:
         print(f"Error while comparing SQL Files: {str(e)}")
 
-def download_stored_procedure(server, database, username, password, sp_name, output_file_path):
+
+def download_stored_procedure(
+    server, database, username, password, sp_name, output_file_path
+):
     try:
         # Establish a connection to the SQL Server
         connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
@@ -998,9 +1006,9 @@ def app3():
             else:
                 content_comparison = "Missing in one of the folders"
                 if not present_in_folder1:
-                    diff_file = f"Missing in {folder1_path}"
+                    diff_file = f"Missing in {os.path.basename(folder1_path)}"
                 else:
-                    diff_file = f"Missing in {folder2_path}"
+                    diff_file = f"Missing in {os.path.basename(folder2_path)}"
 
             comparison_results.append(
                 [
@@ -1018,8 +1026,8 @@ def app3():
     # Define column headers
     headers = [
         "SP Name",
-        f"Present in {os.path.dirname(folder1_path)}",
-        f"Present in {os.path.dirname(folder2_path)}",
+        f"Present in {os.path.basename(folder1_path)}",
+        f"Present in {os.path.basename(folder2_path)}",
         "Content Comparison",
         "Diff File",
     ]
