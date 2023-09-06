@@ -1217,6 +1217,66 @@ def app4():
     except Exception as e:
         print(f"An unexpected error occurred: {str(e)}")
 
+# #########################
+
+
+def app5():
+    try:
+        folder = input("Enter folder path:\t")
+
+        # Get the list of files in the source folder
+        file_list = os.listdir(folder)
+        ignore_patterns = [
+            r".*_SWAPNIL.*",
+            r".*_SQLQUERY.*",
+            r".*_MIG.*",
+            r".*_FARHEEN.*",
+            r".*_SHUBHAM.*",
+            r".*_CHHAGAN.*",
+            r".*_TCKT.*",
+            r".*_tblPivoPOAttainmet.*",
+            r".*_BK.*",
+            r".*_BACKUP.*",
+            r".*_TKT.*",
+            r".*_TICKET.*",
+            r".*_EXCEL.*",
+            r".*_BACKUP.*",
+        ]
+
+        print("\n\nSummary:\n")
+        print(f"Number of files before exclusion: {len(file_list)}")
+        print(f"File list before exclusion: {file_list}")
+        print("\n\n")
+
+        # Create a regular expression pattern to match ignore patterns
+        ignore_pattern = "|".join(ignore_patterns)
+        ignore_pattern = f"({ignore_pattern})"
+
+        # Initialize a list to store excluded files
+        excluded_files = []
+
+        # Filter the files based on the ignore pattern
+        file_list_excl = []
+        for file in file_list:
+            if re.match(ignore_pattern, file):
+                excluded_files.append(file)
+            else:
+                file_list_excl.append(file)
+
+        print(f"Number of files after exclusion: {len(file_list_excl)}")
+        print(f"File list after exclusion: {file_list_excl}\n\n")
+        print(f"Number of files excluded: {len(excluded_files)}")
+        print(f"Excluded files: {excluded_files}")
+
+    except Exception as e:
+        print(f"{str(e)}")
+
+
+
+
+
+# ###############
+
 
 def main():
     try:
@@ -1245,6 +1305,11 @@ def main():
             + RESET
             + "Examine the presence of stored procedures across multiple databases, ensuring their mutual existence.\n"
         )
+        print(
+            YELLOW
+            + "5. Excluded File Statistics: "
+            + RESET
+        )
 
         choice = int(input("Enter your choice: \t"))
         print(f"You have selected option: {choice}.\n")
@@ -1257,6 +1322,8 @@ def main():
             app3()
         elif choice == 4:
             app4()
+        elif choice == 5:
+            app5()
         else:
             print(
                 RED + "Error: " + RESET + "Please select a valid choice from 1 to 4\n"
