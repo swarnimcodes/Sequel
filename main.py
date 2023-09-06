@@ -1,3 +1,5 @@
+import numpy as np
+import fnmatch
 import os
 import codecs
 import chardet  # You may need to install this library
@@ -427,6 +429,34 @@ def strip_comments(sql_file_contents):
 
     return stripped_sql_file
 
+def difference_app2(source_sql_path, test_sql_path) -> bool:
+    try:
+        try:
+            with open(source_sql_path, "r", encoding="utf-8") as file:
+                source_contents = file.read().upper().strip()
+        except UnicodeError:
+            with open(source_sql_path, "r", encoding="utf-16") as file:
+                source_contents = file.read().upper()
+
+        try:
+            with open(test_sql_path, "r", encoding="utf-8") as file:
+                test_contents = file.read().upper().strip()
+        except UnicodeError:
+            with open(test_sql_path, "r", encoding="utf-16") as file:
+                test_contents = file.read().upper()
+
+        # Remove comments without normalizing whitespace
+        stripped_sql_file_source = strip_comments(source_contents)
+        stripped_sql_file_test = strip_comments(test_contents)
+
+        if stripped_sql_file_source == stripped_sql_file_test:
+            return True
+        else:
+            return False
+
+    except Exception as e:
+        print(f"Error while comparing SQL Files: {str(e)}")
+
 
 def difference(source_sql_path, test_sql_path) -> bool:
     try:
@@ -444,14 +474,16 @@ def difference(source_sql_path, test_sql_path) -> bool:
             with open(test_sql_path, "r", encoding="utf-16") as file:
                 test_contents = file.read().upper()
 
-        stripped_sql_file_source = strip_comments(source_contents)
-        stripped_sql_file_source = normalize_sql(stripped_sql_file_source)
-        
-        stripped_sql_file_test = strip_comments(test_contents)
-        stripped_sql_file_test = normalize_sql(stripped_sql_file_test)
+        normalized_sql_file_source = normalize_sql(source_contents)
+        stripped_sql_file_source = strip_comments(normalized_sql_file_source)
+        # stripped_sql_file_source = normalize_sql(stripped_sql_file_source)
 
-        
-        
+        normalized_sql_file_test = normalize_sql(test_contents)
+        stripped_sql_file_test = strip_comments(normalized_sql_file_test)
+        # stripped_sql_file_test = normalize_sql(stripped_sql_file_test)
+
+
+
         if stripped_sql_file_source == stripped_sql_file_test:
             return True
         else:
@@ -494,159 +526,8 @@ def download_stored_procedure(
         print(f"An unexpected error occurred: {str(e)}")
 
 
-def app2_2__():
-    print("Enter Source Database Details:")
-    source_server = input("Enter server address:\t")
-    source_database = input("Enter database name:\t")
-    source_username = input("Enter username:\t")
-    source_password = input("Enter password:\t")
 
-    source_stored_procedures = fetch_stored_procedures(
-        source_server, source_database, source_username, source_password
-    )
-
-    print(source_stored_procedures)
-
-    # print("\n\n")
-
-    for i in range(len(source_stored_procedures)):
-        output_file_path = (
-            f"C:\\Users\\swarn\\github\\Sequel\\testsql\\{source_stored_procedures[i]}"
-        )
-        sqlfile = download_stored_procedure(
-            source_server,
-            source_database,
-            source_username,
-            source_password,
-            source_stored_procedures[i],
-            output_file_path,
-        )
-        print("\n\n")
-        print(sqlfile)
-
-    num_of_target_dbs = int(
-        input("How many target databases do you want to compare against source?\t")
-    )
-
-    target_db_dic = {}
-    print("Enter details for target databases:\n")
-    for i in num_of_target_dbs:
-        target_db_dic[i]["Server"] = input(
-            f"Enter Server Address for target database number {i}:\t"
-        )
-        target_db_dic[i]["Database"] = input(
-            f"Enter Database Name for target database number {i}:\t"
-        )
-        target_db_dic[i]["Username"] = input(
-            f"Enter Username for target database number {i}:\t"
-        )
-        target_db_dic[i]["Password"] = input(
-            f"Enter Password for target database number {i}:\t"
-        )
-
-    # print(target_db_dic)
-
-    # try:
-    #     sp_data = []
-    #     summary = {}
-
-    #     for target_db_dir in target_db_dirs:
-    #         summary[target_db_dir] = {
-    #             "Absent Entries": 0,
-    #             "Present & Unequal Entries": 0,
-    #             "Present & Equal Entries": 0,
-    #         }
-
-    #     for sp_name in stored_procedures:
-    #         sp_info = {"SP Name": sp_name}
-    #         source_sql_path = (
-    #             f"online_db_{sp_name}.sql"  # You can customize the filename as needed
-    #         )
-
-    #         for target_db_dir in target_db_dirs:
-    #             target_sql_path = os.path.join(target_db_dir, f"{sp_name}.sql")
-    #             if os.path.exists(target_sql_path):
-    #                 if difference(source_sql_path, target_sql_path):
-    #                     sp_info[os.path.basename(target_db_dir)] = "PRESENT & EQUAL"
-    #                     summary[target_db_dir]["Present & Equal Entries"] += 1
-    #                 else:
-    #                     sp_info[os.path.basename(target_db_dir)] = "PRESENT & UNEQUAL"
-    #                     summary[target_db_dir]["Present & Unequal Entries"] += 1
-    #             else:
-    #                 sp_info[os.path.basename(target_db_dir)] = "ABSENT"
-    #                 summary[target_db_dir]["Absent Entries"] += 1
-
-    #         sp_data.append(sp_info)
-
-    #     df = pd.DataFrame(sp_data)
-
-    #     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
-    #     output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
-    #     df.to_excel(output_excel_path, index=False)
-    #     # Load the existing workbook and sheet
-    #     wb = load_workbook(output_excel_path)
-    #     ws = wb.active
-
-    #     # Apply cell coloring based on the cell values
-    #     for row in ws.iter_rows(
-    #         min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
-    #     ):
-    #         for cell in row:
-    #             if cell.value == "PRESENT & UNEQUAL":
-    #                 cell.fill = PatternFill(
-    #                     start_color="FCD5B4", end_color="FCD5B4", fill_type="solid"
-    #                 )
-    #             elif cell.value == "ABSENT":
-    #                 cell.fill = PatternFill(
-    #                     start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
-    #                 )
-
-    #     # Save the modified workbook
-    #     wb.save(output_excel_path)
-
-    #     # Print the summary for each target database
-    #     print(YELLOW + "\n\nSummary:\n\n" + RESET)
-    #     for target_db_dir, summary_data in summary.items():
-    #         print(
-    #             YELLOW
-    #             + "\nTarget Database: "
-    #             + RESET
-    #             + GREEN
-    #             + f"{os.path.basename(target_db_dir)}"
-    #             + RESET
-    #         )
-    #         print(f"Absent Entries: {summary_data['Absent Entries']}")
-    #         print(
-    #             f"Present & Unequal Entries: {summary_data['Present & Unequal Entries']}"
-    #         )
-    #         print(f"Present & Equal Entries: {summary_data['Present & Equal Entries']}")
-    #         print(
-    #             f"Total Entries Scanned Against Source: {summary_data['Absent Entries']+summary_data['Present & Unequal Entries']+summary_data['Present & Equal Entries']}"
-    #         )
-    #         print("\n")
-
-    #     excel_absolute_path = os.path.abspath(output_excel_path)
-    #     print(
-    #         GREEN
-    #         + "\nSuccess: "
-    #         + RESET
-    #         + f"Excel Report has been generated at {excel_absolute_path}\n"
-    #     )
-    #     os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
-    #     input("Press Enter to exit...")
-
-    # except Exception as e:
-    #     print(f"An unexpected error occurred: {str(e)}")
-
-
-## APP 2_2()
-
-
-def app2_2():
-    pass
-
-
-def app2_1():
+def app2():
     try:
         print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
         source_db_dir = input(
@@ -735,6 +616,11 @@ def app2_1():
         # Get the list of sql file in source database
         source_sql_file_list = os.listdir(source_db_dir)
 
+        for file in source_sql_file_list:
+            if fnmatch.fnmatch(file, '*backup*'):
+                source_sql_file_list.remove(file)
+
+
         summary = {}
 
         for target_db_dir in target_db_dirs:
@@ -752,7 +638,7 @@ def app2_1():
             for target_db_dir in target_db_dirs:
                 target_sql_path = os.path.join(target_db_dir, sql_file)
                 if os.path.exists(target_sql_path):
-                    if difference(source_sql_path, target_sql_path):
+                    if difference_app2(source_sql_path, target_sql_path):
                         sp_info[os.path.basename(target_db_dir)] = "PRESENT & EQUAL"
                         summary[target_db_dir]["Present & Equal Entries"] += 1
                     else:
@@ -825,20 +711,20 @@ def app2_1():
         print(f"An unexpected error occurred: {str(e)}")
 
 
-def app2():
-    online = input(
-        "Do you want to carry out the SP comparison for online databases or offline stored database directories?\nEnter 1 for offline\nEnter 2 for online\nYour choice:\t\t"
-    ).strip()
-    online = int(online)
+# def app2():
+#     online = input(
+#         "Do you want to carry out the SP comparison for online databases or offline stored database directories?\nEnter 1 for offline\nEnter 2 for online\nYour choice:\t\t"
+#     ).strip()
+#     online = int(online)
 
-    match online:
-        case 1:
-            app2_1()
-        case 2:
-            app2_2()
-        case _:
-            print("Invalid choice. Exiting...")
-            sys.exit(1)
+#     match online:
+#         case 1:
+#             app2_1()
+#         case 2:
+#             app2_2()
+#         case _:
+#             print("Invalid choice. Exiting...")
+#             sys.exit(1)
 
 
 # END OF APP 2 #########################################################################
@@ -858,7 +744,7 @@ def strip_sql_comments(sql_file_contents) -> str:
 
 def normalize_sql(file_contents):
     tokens = nltk.word_tokenize(file_contents)
-    file_contents_stringed = "".join(tokens)
+    file_contents_stringed = " ".join(tokens)
     return file_contents_stringed
 
 
@@ -1019,6 +905,27 @@ def app3():
                     diff_file,
                 ]
             )
+
+
+
+    # TODO: add functionality where it shows what sp is not present in which db
+    for sql_file in os.listdir(folder2_path):
+        sp_name = sql_file
+        if sql_file.endswith(".sql"):
+            if os.path.exists(os.path.join(folder2_path, sql_file)) == True and os.path.exists(os.path.join(folder1_path, sql_file)) != True:
+                print(f"{sql_file} present in target but not in source")
+                comparison_results.append(
+                    [
+                        sp_name,
+                        os.path.exists(os.path.join(folder1_path, sql_file)),
+                        os.path.exists(os.path.join(folder2_path, sql_file)),
+                        f"Missing in {os.path.basename(folder1_path)}"
+                    ]
+                )
+
+
+
+
     # Create a new Excel workbook and add a worksheet
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -1045,6 +952,8 @@ def app3():
     ):
         if row[3].value == "Different":
             row[3].fill = different_color
+        if row[1].value == False:
+            row[1].fill = missing_color
         if row[2].value == False:
             row[2].fill = missing_color
 
@@ -1079,6 +988,135 @@ def app3():
 
     # END OF APP 3 #########################################################################
 
+def get_unique_list(non_unique_list):
+    unique_list = []
+
+    for number in non_unique_list:
+        if number in unique_list:
+            continue
+        else:
+            unique_list.append(number)
+    return unique_list
+
+
+
+def app4():
+    try:
+        num_target_dbs = input(
+            "Enter"
+            + GREEN
+            + " Number of Databases "
+            + RESET
+            + "you want to compare:\t"
+        )
+
+        if not num_target_dbs:
+            print(
+                RED
+                + "\n\nError: "
+                + RESET
+                + "No input provided. Exiting the program...\n\n"
+            )
+            sys.exit(1)
+
+        try:
+            num_target_dbs = int(num_target_dbs)
+        except ValueError:
+            print(
+                RED
+                + "\n\nError: "
+                + RESET
+                + "Invalid input. Please enter a valid positive integer.\n\n"
+            )
+            sys.exit(1)
+
+        target_db_dirs = []
+
+        for i in range(num_target_dbs):
+            while True:
+                target_db_dir = input(
+                    "\nEnter "
+                    + GREEN
+                    + "database directory location "
+                    + RESET
+                    + f"for target database number {i+1}:\t"
+                )
+
+                if not target_db_dir.strip():
+                    print(
+                        RED
+                        + "Error: "
+                        + RESET
+                        + "No input provided. Please enter a directory location.\n"
+                    )
+                elif not os.path.exists(target_db_dir):
+                    print(
+                        RED
+                        + "Error: "
+                        + RESET
+                        + f"The directory '{target_db_dir}' does not exist or is invalid. Please enter a valid directory location.\n"
+                    )
+                else:
+                    target_db_dirs.append(target_db_dir)
+                    break  # Valid input, exit the loop
+
+        sp_data = []
+
+        # Get the list of SQL files from all target database directories
+        unique_file_list = set()
+        for target_db_dir in target_db_dirs:
+            sql_files = [f for f in os.listdir(target_db_dir) if f.endswith(".sql")]
+            unique_file_list.update(sql_files)
+
+        print(f"Total unique files found: {len(unique_file_list)}")
+
+        for sql_file in unique_file_list:
+            sp_name = os.path.splitext(sql_file)[0]  # Remove the .sql extension
+            sp_info = {"SP Name": sp_name}
+
+            for target_db_dir in target_db_dirs:
+                target_sql_path = os.path.join(target_db_dir, sql_file)
+                if os.path.exists(target_sql_path):
+                    sp_info[os.path.basename(target_db_dir)] = "PRESENT"
+                else:
+                    sp_info[os.path.basename(target_db_dir)] = "ABSENT"
+
+            sp_data.append(sp_info)
+
+        df = pd.DataFrame(sp_data)
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+        output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
+        df.to_excel(output_excel_path, index=False)
+
+        wb = load_workbook(output_excel_path)
+        ws = wb.active
+
+        for row in ws.iter_rows(
+            min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
+        ):
+            for cell in row:
+                if cell.value == "ABSENT":
+                    cell.fill = PatternFill(
+                        start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
+                    )
+
+        wb.save(output_excel_path)
+        excel_absolute_path = os.path.abspath(output_excel_path)
+        print(
+            GREEN
+            + "\nSuccess: "
+            + RESET
+            + f"Excel Report has been generated at {excel_absolute_path}\n"
+        )
+        os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
+        input("Press Enter to exit...")
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
+
+
+
 
 def main():
     try:
@@ -1111,6 +1149,8 @@ def main():
             app2()
         elif choice == 3:
             app3()
+        elif choice == 4:
+            app4()
         else:
             print(
                 RED + "Error: " + RESET + "Please select a valid choice from 1 to 4\n"
@@ -1123,3 +1163,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+# # Print the list of unique files
+# print("Superset list of files:")
+# for file in file_list:
+#     print(file)
