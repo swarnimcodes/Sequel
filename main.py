@@ -1268,6 +1268,19 @@ def app5():
         print(f"Number of files excluded: {len(excluded_files)}")
         print(f"Excluded files: {excluded_files}")
 
+        wb_excl = openpyxl.Workbook()
+        ws = wb_excl.active
+
+        # Headers
+        ws['A1'] = "Total Files"
+        ws['B1'] = "Original Files"
+        ws['C1'] = "Backup Files"
+
+        # Data
+        ws.append([len(file_list), len(file_list_excl), len(excluded_files)])
+
+        wb_excl.save("Exclusion Statistics.xlsx")
+
     except Exception as e:
         print(f"{str(e)}")
 
