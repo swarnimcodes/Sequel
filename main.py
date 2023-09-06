@@ -1285,8 +1285,71 @@ def app5():
 
     except Exception as e:
         print(f"{str(e)}")
+# END OF APP 5 ###############
+
+def app6():
+    print("App 6")
+
+    folder = input("Enter folder location:\t")
+
+    file_list = os.listdir(folder)
+
+    print("\nType 'done' and press enter when done entering patterns\n")
+    n = 1
+    patterns = []
+
+    while n > 0:
+        pt = input("Enter pattern:\t")
+        if pt != 'done':
+            patterns.append(pt)
+        else:
+            break
+        pass
+
+    # print(patterns)
+
+    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in patterns]
+
+    # print(ignore_patterns_list)
+
+    # Create a regular expression pattern to match ignore patterns
+    ignore_pattern = "|".join(ignore_patterns_list)
+    ignore_pattern = f"({ignore_pattern})"
+
+    excluded_files = []
+
+    included_files = []
+
+    for file in file_list:
+        if re.match(ignore_pattern, file):
+            excluded_files.append(file)
+        else:
+            included_files.append(file)
+
+    print(f"Files without your pattern:\n {included_files}")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    # Headers
+    ws['A1'] = "Included Files"
+    ws['B1'] = "Excluded Files (pattern matched)"
+    column_letter1 = 'A'
+    for file in included_files:
+        cell = ws[column_letter1 + str(ws.max_row + 1)]
+        cell.value = file
+    
+    column_letter2 = 'B'
+    for file in excluded_files:
+        cell = ws[column_letter2 + str(ws.max_row + 1)]
+        cell.value = file
 
 
+    # Data
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    excel_file_name = f"Inluded_Excluded_Files_{timestamp}.xlsx"
+
+    wb.save(excel_file_name)
 
 
 
@@ -1339,9 +1402,11 @@ def main():
             app4()
         elif choice == 5:
             app5()
+        elif choice == 6:
+            app6()
         else:
             print(
-                RED + "Error: " + RESET + "Please select a valid choice from 1 to 4\n"
+                RED + "Error: " + RESET + "Please select a valid choice from 1 to 6\n"
             )
     except ValueError:
         print(RED + "\nError: " + RESET + "Please enter a valid numeric choice.\n")
