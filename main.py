@@ -1,25 +1,20 @@
-import numpy as np
+import codecs
+import datetime
+import difflib
 import fnmatch
 import os
-import codecs
-import chardet  # You may need to install this library
-import signal
-import datetime
-from os.path import exists
-import re
-import datetime
-from openpyxl import load_workbook
-import openpyxl
-from openpyxl.styles import PatternFill
-import pandas as pd
-import pyodbc
-import nltk
-import os
-import difflib
-import sqlparse
 import re
 import sys
+from os.path import exists
+
+import nltk
+import numpy as np
+import openpyxl
 import pandas as pd
+import pyodbc
+import sqlparse
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 from tqdm import tqdm
 
 # ANSI escape codes for text colors
@@ -27,6 +22,82 @@ RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
+
+def connect_to_server(server, database, username, password):
+    try:
+        connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
+        connection = pyodbc.connect(connection_string)
+        cursor = connection.cursor()
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
+    return cursor
+
+def fetch_schema_revamp(server, database, username, password):
+    cursor = connect_to_server(server, database, username, password)
+    schema_info = {}
+
+    query = """
+    SELECT
+    t.TABLE_SCHEMA,
+    t.TABLE_NAME,
+    c.COLUMN_NAME,
+    c.DATA_TYPE,
+    c.CHARACTER_MAXIMUM_LENGTH,
+    c.NUMERIC_PRECISION,
+    c.NUMERIC_SCALE
+    FROM INFORMATION_SCHEMA.TABLES AS t
+    JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+    WHERE t.TABLE_TYPE = 'BASE TABLE'
+    AND
+    (
+    t.TABLE_NAME NOT LIKE '%BKUP%'
+    AND t.TABLE_NAME NOT LIKE '%BKP%'
+    AND t.TABLE_NAME NOT LIKE '%20%'
+    AND t.TABLE_NAME NOT LIKE '%SWAPNIL%'
+    AND t.TABLE_NAME NOT LIKE '%SQLQUERY%'
+    AND t.TABLE_NAME NOT LIKE '%FARHEEN%'
+    AND t.TABLE_NAME NOT LIKE '%SHUBHAM%'
+    AND t.TABLE_NAME NOT LIKE '%CHHAGAN%'
+    AND t.TABLE_NAME NOT LIKE '%TCKT%'
+    AND t.TABLE_NAME NOT LIKE '%MIGRATION%'
+    AND t.TABLE_NAME NOT LIKE '%MIGR%'
+    AND t.TABLE_NAME NOT LIKE '%TID%'
+    AND t.TABLE_NAME NOT LIKE '%tblPivoPOAttainmet%'
+    AND t.TABLE_NAME NOT LIKE '%BK%'
+    AND t.TABLE_NAME NOT LIKE '%BACKUP%'
+    AND t.TABLE_NAME NOT LIKE '%TKT%'
+    AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
+    AND t.TABLE_NAME NOT LIKE '%TICKET%'
+    AND t.TABLE_NAME NOT LIKE '%MIG%'
+    )
+    ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
+    """
+
+    print("\nExecuting the schema query. Please wait...\n")
+    cursor.execute(query)
+    print("Schema query execution" + GREEN + " completed" + RESET + ".\n")
+    rows = cursor.fetchall()
+
+    for row in rows:
+        table_schema = row.TABLE_SCHEMA
+        table_name = row.TABLE_NAME
+        column_name = row.COLUMN_NAME
+        data_type = row.DATA_TYPE
+        max_length = row.CHARACTER_MAXIMUM_LENGTH
+        numeric_precision = row.NUMERIC_PRECISION
+        numeric_scale = row.NUMERIC_SCALE
+
+        schema_info.setdefault(table_schema, {}).setdefault(table_name, []).append(
+            {
+                "column_name": column_name,
+                "data_type": data_type,
+                "max_length": max_length,
+                "numeric_precision": numeric_precision,
+                "numeric_scale": numeric_scale,
+            }
+        )
+        cursor.close()
 
 
 def fetch_schema(server, database, username, password):
