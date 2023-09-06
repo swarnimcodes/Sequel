@@ -1,0 +1,6 @@
+numpy
+pandas
+openpyxl
+sqlparse
+nltk
+tqdm

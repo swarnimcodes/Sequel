@@ -39,18 +39,55 @@ def fetch_schema(server, database, username, password):
         cursor = connection.cursor()
 
         # Fetch Schema
+        # schema_query = """
+        # SELECT
+        #     t.TABLE_SCHEMA,
+        #     t.TABLE_NAME,
+        #     c.COLUMN_NAME,
+        #     c.DATA_TYPE,
+        #     c.CHARACTER_MAXIMUM_LENGTH,
+        #     c.NUMERIC_PRECISION,
+        #     c.NUMERIC_SCALE
+        # FROM INFORMATION_SCHEMA.TABLES AS t
+        # JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+        # WHERE t.TABLE_TYPE = 'BASE TABLE'
+        # ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
+        # """
+
         schema_query = """
         SELECT
-            t.TABLE_SCHEMA,
-            t.TABLE_NAME,
-            c.COLUMN_NAME,
-            c.DATA_TYPE,
-            c.CHARACTER_MAXIMUM_LENGTH,
-            c.NUMERIC_PRECISION,
-            c.NUMERIC_SCALE
+        t.TABLE_SCHEMA,
+        t.TABLE_NAME,
+        c.COLUMN_NAME,
+        c.DATA_TYPE,
+        c.CHARACTER_MAXIMUM_LENGTH,
+        c.NUMERIC_PRECISION,
+        c.NUMERIC_SCALE
         FROM INFORMATION_SCHEMA.TABLES AS t
         JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
         WHERE t.TABLE_TYPE = 'BASE TABLE'
+        AND
+        (
+        t.TABLE_NAME NOT LIKE '%BKUP%'
+        AND t.TABLE_NAME NOT LIKE '%BKP%'
+        AND t.TABLE_NAME NOT LIKE '%20%'
+        AND t.TABLE_NAME NOT LIKE '%SWAPNIL%'
+        AND t.TABLE_NAME NOT LIKE '%SQLQUERY%'
+        AND t.TABLE_NAME NOT LIKE '%FARHEEN%'
+        AND t.TABLE_NAME NOT LIKE '%SHUBHAM%'
+        AND t.TABLE_NAME NOT LIKE '%CHHAGAN%'
+        AND t.TABLE_NAME NOT LIKE '%TCKT%'
+        AND t.TABLE_NAME NOT LIKE '%MIGRATION%'
+        AND t.TABLE_NAME NOT LIKE '%MIGR%'
+        AND t.TABLE_NAME NOT LIKE '%TID%'
+        AND t.TABLE_NAME NOT LIKE '%tblPivoPOAttainmet%'
+        AND t.TABLE_NAME NOT LIKE '%BK%'
+        AND t.TABLE_NAME NOT LIKE '%BACKUP%'
+        AND t.TABLE_NAME NOT LIKE '%TKT%'
+        AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
+        AND t.TABLE_NAME NOT LIKE '%TICKET%'
+        AND t.TABLE_NAME NOT LIKE '%MIG%'
+        )
         ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
         """
 
@@ -131,6 +168,19 @@ def perform_schema_comparison(source_schema, target_schema):
         for table_name in source_schema[schema]:
             source_columns = source_schema[schema][table_name]
             target_columns = target_schema[schema].get(table_name, [])
+
+            if not bool(target_columns):
+                print(f"{table_name} Table Not found in target database")
+                # comparison_result = {
+                #         "schema": schema,
+                #         "table_name": table_name,
+                #         "column_name": f"Table {table_name} Not Found",
+                #         "data_type": "Missing Table",
+                #         "max_length": str(col_info_source),
+                #         "numeric_precision": "",
+                #         "numeric_scale": "",
+                # }
+
 
             for col_info_source in source_columns:
                 col_name_source = col_info_source["column_name"]
