@@ -1288,6 +1288,144 @@ def app4():
     except Exception as e:
         print(f"An unexpected error occurred: {str(e)}")
 
+# #########################
+
+
+def app5():
+    try:
+        folder = input("Enter folder path:\t")
+
+        # Get the list of files in the source folder
+        file_list = os.listdir(folder)
+        ignore_patterns = [
+            r".*_SWAPNIL.*",
+            r".*_SQLQUERY.*",
+            r".*_MIG.*",
+            r".*_FARHEEN.*",
+            r".*_SHUBHAM.*",
+            r".*_CHHAGAN.*",
+            r".*_TCKT.*",
+            r".*_tblPivoPOAttainmet.*",
+            r".*_BK.*",
+            r".*_BACKUP.*",
+            r".*_TKT.*",
+            r".*_TICKET.*",
+            r".*_EXCEL.*",
+            r".*_BACKUP.*",
+        ]
+
+        print("\n\nSummary:\n")
+        print(f"Number of files before exclusion: {len(file_list)}")
+        print(f"File list before exclusion: {file_list}")
+        print("\n\n")
+
+        # Create a regular expression pattern to match ignore patterns
+        ignore_pattern = "|".join(ignore_patterns)
+        ignore_pattern = f"({ignore_pattern})"
+
+        # Initialize a list to store excluded files
+        excluded_files = []
+
+        # Filter the files based on the ignore pattern
+        file_list_excl = []
+        for file in file_list:
+            if re.match(ignore_pattern, file):
+                excluded_files.append(file)
+            else:
+                file_list_excl.append(file)
+
+        print(f"Number of files after exclusion: {len(file_list_excl)}")
+        print(f"File list after exclusion: {file_list_excl}\n\n")
+        print(f"Number of files excluded: {len(excluded_files)}")
+        print(f"Excluded files: {excluded_files}")
+
+        wb_excl = openpyxl.Workbook()
+        ws = wb_excl.active
+
+        # Headers
+        ws['A1'] = "Total Files"
+        ws['B1'] = "Original Files"
+        ws['C1'] = "Backup Files"
+
+        # Data
+        ws.append([len(file_list), len(file_list_excl), len(excluded_files)])
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+        ex_file_name = f"Backup_File_Statistics_{timestamp}.xlsx"
+
+        wb_excl.save(ex_file_name)
+
+    except Exception as e:
+        print(f"{str(e)}")
+# END OF APP 5 ###############
+
+def app6():
+    print("App 6")
+
+    folder = input("Enter folder location:\t")
+
+    file_list = os.listdir(folder)
+
+    print("\nType 'done' and press enter when done entering patterns\n")
+    n = 1
+    patterns = []
+
+    while n > 0:
+        pt = input("Enter pattern:\t")
+        if pt != 'done':
+            patterns.append(pt)
+        else:
+            break
+        pass
+
+    # print(patterns)
+
+    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in patterns]
+
+    # print(ignore_patterns_list)
+
+    # Create a regular expression pattern to match ignore patterns
+    ignore_pattern = "|".join(ignore_patterns_list)
+    ignore_pattern = f"({ignore_pattern})"
+
+    excluded_files = []
+
+    included_files = []
+
+    for file in file_list:
+        if re.match(ignore_pattern, file):
+            excluded_files.append(file)
+        else:
+            included_files.append(file)
+
+    print(f"Files without your pattern:\n {included_files}")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    # Headers
+    ws['A1'] = "Included Files"
+    ws['B1'] = "Excluded Files (pattern matched)"
+    column_letter1 = 'A'
+    for file in included_files:
+        cell = ws[column_letter1 + str(ws.max_row + 1)]
+        cell.value = file
+    
+    column_letter2 = 'B'
+    for file in excluded_files:
+        cell = ws[column_letter2 + str(ws.max_row + 1)]
+        cell.value = file
+
+
+    # Data
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    excel_file_name = f"Inluded_Excluded_Files_{timestamp}.xlsx"
+
+    wb.save(excel_file_name)
+
+
+
+# ###############
+
 
 def main():
     try:
@@ -1316,6 +1454,11 @@ def main():
             + RESET
             + "Examine the presence of stored procedures across multiple databases, ensuring their mutual existence.\n"
         )
+        print(
+            YELLOW
+            + "5. Excluded File Statistics: "
+            + RESET
+        )
 
         choice = int(input("Enter your choice: \t"))
         print(f"You have selected option: {choice}.\n")
@@ -1328,9 +1471,13 @@ def main():
             app3()
         elif choice == 4:
             app4()
+        elif choice == 5:
+            app5()
+        elif choice == 6:
+            app6()
         else:
             print(
-                RED + "Error: " + RESET + "Please select a valid choice from 1 to 4\n"
+                RED + "Error: " + RESET + "Please select a valid choice from 1 to 6\n"
             )
     except ValueError:
         print(RED + "\nError: " + RESET + "Please enter a valid numeric choice.\n")
@@ -1340,6 +1487,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-##
