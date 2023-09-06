@@ -429,6 +429,36 @@ def strip_comments(sql_file_contents):
 
     return stripped_sql_file
 
+def strip_comments_after_create(sql_file_contents):
+    try:
+        # Split the SQL content into lines
+        lines = sql_file_contents.splitlines()
+        create_found = False
+        stripped_lines = []
+
+        for line in lines:
+            # Check if the line contains "CREATE" (case-insensitive)
+            if not create_found and re.search(r'\bCREATE\b', line, re.IGNORECASE):
+                create_found = True
+                continue
+
+            if create_found:
+                # Remove comments from the line
+                line = re.sub(r"--.*", "", line)
+                line = re.sub(r"/\*.*?\*/", "", line, flags=re.DOTALL)
+                line = line.strip()  # Remove leading/trailing whitespace
+                if line:
+                    stripped_lines.append(line)
+
+        # Join the stripped lines to form the SQL content
+        stripped_sql_file = '\n'.join(stripped_lines)
+
+    except Exception as e:
+        print(f"Error while stripping comments: {str(e)}")
+        stripped_sql_file = ""
+
+    return stripped_sql_file
+
 def difference_app2(source_sql_path, test_sql_path) -> bool:
     try:
         try:
@@ -446,8 +476,8 @@ def difference_app2(source_sql_path, test_sql_path) -> bool:
                 test_contents = file.read().upper()
 
         # Remove comments without normalizing whitespace
-        stripped_sql_file_source = strip_comments(source_contents)
-        stripped_sql_file_test = strip_comments(test_contents)
+        stripped_sql_file_source = strip_comments_after_create(source_contents)
+        stripped_sql_file_test = strip_comments_after_create(test_contents)
 
         if stripped_sql_file_source == stripped_sql_file_test:
             return True
@@ -616,9 +646,11 @@ def app2():
         # Get the list of sql file in source database
         source_sql_file_list = os.listdir(source_db_dir)
 
-        for file in source_sql_file_list:
-            if fnmatch.fnmatch(file, '*backup*'):
-                source_sql_file_list.remove(file)
+        # IMPORTANT, DO NOT DELETE
+        # Remove files with backup in their name (case insensitive)
+        # for file in source_sql_file_list:
+        #     if fnmatch.fnmatch(file, '*backup*'):
+        #         source_sql_file_list.remove(file)
 
 
         summary = {}
@@ -1168,7 +1200,6 @@ if __name__ == "__main__":
 
 
 
-# # Print the list of unique files
-# print("Superset list of files:")
-# for file in file_list:
-#     print(file)
+##
+
+
