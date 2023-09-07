@@ -530,7 +530,7 @@ def fetch_stored_procedures(server, database, username, password) -> list:
 
         cursor.execute(query)
         # rows = cursor.fetchall()  # to get all stored procedures
-        rows = cursor.fetchmany(1000)
+        rows = cursor.fetchmany(200)
 
         for row in rows:
             stored_procedures.append(row[0])
@@ -1452,33 +1452,52 @@ def app2_1() -> None:
     total_files_before_exclusion = len(source_sps)
 
     # Get the list of sql file in source database
-    ignore = []
-    ignore = [
-        "*_SWAPNIL*",
-        "*_SQLQUERY*",
-        "*_MIG*",
-        "*_FARHEEN*",
-        "*_SHUBHAM*",
-        "*_CHHAGAN*",
-        "*_TCKT*",
-        "*_tblPivoPOAttainmet*",
-        "*_BK*",
-        "*_BACKUP*",
-        "*_TKT*",
-        "*_TICKET*",
-        "*_EXCEL",
-    ]
 
-    # Remove files with backup in their name (case insensitive)
+    ignore = []
+    ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
+    with open(ignore_file_path, "r") as f:
+        ignore = f.read().splitlines()
+
+    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
+
+    # Create a regular expression pattern to match ignore patterns
+    ignore_pattern = "|".join(ignore_patterns_list)
+    ignore_pattern = f"({ignore_pattern})"
+
+    # Exclusion based on pattern matching file
+
     for file in source_sps:
-        for ignore_word in ignore:
-            if fnmatch.fnmatch(file, ignore_word):
-                try:
-                    if file in source_sps:
-                        source_sps.remove(file)
-                except Exception as e:
-                    print(f"{str(e)}")
-                    print(f"Error {ignore_word}, {file}")
+        if re.match(ignore_pattern, file):
+            source_sps.remove(file)
+
+    # print(ignore_patterns_list)
+
+    # ignore = [
+    #     "*_SWAPNIL*",
+    #     "*_SQLQUERY*",
+    #     "*_MIG*",
+    #     "*_FARHEEN*",
+    #     "*_SHUBHAM*",
+    #     "*_CHHAGAN*",
+    #     "*_TCKT*",
+    #     "*_tblPivoPOAttainmet*",
+    #     "*_BK*",
+    #     "*_BACKUP*",
+    #     "*_TKT*",
+    #     "*_TICKET*",
+    #     "*_EXCEL",
+    # ]
+
+    # # Remove files with backup in their name (case insensitive)
+    # for file in source_sps:
+    #     for ignore_word in ignore:
+    #         if fnmatch.fnmatch(file, ignore_word):
+    #             try:
+    #                 if file in source_sps:
+    #                     source_sps.remove(file)
+    #             except Exception as e:
+    #                 print(f"{str(e)}")
+    #                 print(f"Error {ignore_word}, {file}")
 
     total_files_after_exclusion = len(source_sps)
 
