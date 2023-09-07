@@ -23,6 +23,7 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
+
 def connect_to_server(server, database, username, password):
     try:
         connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
@@ -32,6 +33,7 @@ def connect_to_server(server, database, username, password):
         print(f"Error: {str(e)}")
 
     return connection
+
 
 def fetch_schema_revamp(server, database, username, password) -> dict:
     connection = connect_to_server(server, database, username, password)
@@ -102,7 +104,6 @@ def fetch_schema_revamp(server, database, username, password) -> dict:
     cursor.close()
     connection.close()
     return schema_info
-
 
 
 # def fetch_schema(server, database, username, password):
@@ -252,14 +253,14 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
             if not bool(target_columns):
                 print(f"{table_name} Table Not found in target database")
                 comparison_result = {
-                        "schema": schema,
-                        "table_name": table_name,
-                        "column_name": f"Table {table_name} Not Found",
-                        "data_type": "Missing Table",
-                        "max_length": str(col_info_source),
-                        "numeric_precision": "",
-                        "numeric_scale": "",
-                        }
+                    "schema": schema,
+                    "table_name": table_name,
+                    "column_name": f"Table {table_name} Not Found",
+                    "data_type": "Missing Table",
+                    "max_length": str(col_info_source),
+                    "numeric_precision": "",
+                    "numeric_scale": "",
+                }
                 comparison_results.append(comparison_result)
             else:
                 for col_info_source in source_columns:
@@ -296,8 +297,6 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                             "numeric_scale": "",
                         }
                         comparison_results.append(comparison_result)
-
-
 
     return comparison_results
 
@@ -561,7 +560,6 @@ def strip_comments(sql_file_contents) -> str:
     return stripped_sql_file
 
 
-
 ## This function is supposed to ignore lines before the word "Create"
 ## This is useful but has a few caveats such as what if there is the word create
 ## in the comments before the actual statement that creates the procedure
@@ -660,7 +658,6 @@ def difference(source_sql_path, test_sql_path):
 
     except Exception as e:
         print(f"Error while comparing SQL Files: {str(e)}")
-
 
 
 def app2_2() -> None:
@@ -765,7 +762,7 @@ def app2_2() -> None:
             "*_BACKUP*",
             "*_TKT*",
             "*_TICKET*",
-            "*_EXCEL"
+            "*_EXCEL",
         ]
 
         # Remove files with backup in their name (case insensitive)
@@ -778,7 +775,6 @@ def app2_2() -> None:
                     except Exception as e:
                         print(f"{str(e)}")
                         print(f"Error {ignore_word}, {file}")
-
 
         summary = {}
 
@@ -819,7 +815,9 @@ def app2_2() -> None:
         ws = wb.active
 
         # Apply cell coloring based on the cell values
-        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column):
+        for row in ws.iter_rows(
+            min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
+        ):
             for cell in row:
                 if cell.value == "PRESENT & UNEQUAL":
                     cell.fill = PatternFill(
@@ -866,9 +864,6 @@ def app2_2() -> None:
 
     except Exception as e:
         print(f"An unexpected error occurred: {str(e)}")
-
-
-
 
 
 # END OF APP 2 #########################################################################
@@ -1018,7 +1013,9 @@ def app3():
                 normalized_sql_2 = normalize_sql(file2_contents)
                 file2_nocomments = strip_sql_comments(normalized_sql_2)
 
-                if difference(file1_path, file2_path):  # TODO: use the new difference function to avoid duplication
+                if difference(
+                    file1_path, file2_path
+                ):  # TODO: use the new difference function to avoid duplication
                     content_comparison = "Equal"
                     # print(f"Files {sql_file} are equal")
                 else:
@@ -1252,6 +1249,7 @@ def app4():
     except Exception as e:
         print(f"An unexpected error occurred: {str(e)}")
 
+
 # #########################
 
 
@@ -1307,9 +1305,9 @@ def app5():
         ws = wb_excl.active
 
         # Headers
-        ws['A1'] = "Total Files"
-        ws['B1'] = "Original Files"
-        ws['C1'] = "Backup Files"
+        ws["A1"] = "Total Files"
+        ws["B1"] = "Original Files"
+        ws["C1"] = "Backup Files"
 
         # Data
         ws.append([len(file_list), len(file_list_excl), len(excluded_files)])
@@ -1320,7 +1318,10 @@ def app5():
 
     except Exception as e:
         print(f"{str(e)}")
+
+
 # END OF APP 5 ###############
+
 
 def app6():
     print("App 6")
@@ -1335,7 +1336,7 @@ def app6():
 
     while n > 0:
         pt = input("Enter pattern:\t")
-        if pt != 'done':
+        if pt != "done":
             patterns.append(pt)
         else:
             break
@@ -1367,18 +1368,17 @@ def app6():
     ws = wb.active
 
     # Headers
-    ws['A1'] = "Included Files"
-    ws['B1'] = "Excluded Files (pattern matched)"
-    column_letter1 = 'A'
+    ws["A1"] = "Included Files"
+    ws["B1"] = "Excluded Files (pattern matched)"
+    column_letter1 = "A"
     for file in included_files:
         cell = ws[column_letter1 + str(ws.max_row + 1)]
         cell.value = file
 
-    column_letter2 = 'B'
+    column_letter2 = "B"
     for file in excluded_files:
         cell = ws[column_letter2 + str(ws.max_row + 1)]
         cell.value = file
-
 
     # Data
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
@@ -1387,8 +1387,8 @@ def app6():
     wb.save(excel_file_name)
 
 
-
 # ###############
+
 
 def fetch_sp_content(sp_name, server, database, username, password) -> str:
     connection = connect_to_server(server, database, username, password)
@@ -1400,9 +1400,10 @@ def fetch_sp_content(sp_name, server, database, username, password) -> str:
     cursor.execute(query)
 
     sp_content_list = cursor.fetchall()
-    sp_content = '\n'.join(line[0].strip() for line in sp_content_list)
+    sp_content = "\n".join(line[0].strip() for line in sp_content_list)
 
     return sp_content
+
 
 def app2_1() -> None:
     print("SP Analyzer Online")
@@ -1414,7 +1415,9 @@ def app2_1() -> None:
     password = input("Enter Password:\t")
 
     print("Enter Target Database Details:\t")
-    print("The program will continue to ask for information until you type 'done' and press Enter when it asks.\n\n")
+    print(
+        "The program will continue to ask for information until you type 'done' and press Enter when it asks.\n\n"
+    )
 
     stop_key = "not done"
     count = 1
@@ -1424,13 +1427,22 @@ def app2_1() -> None:
     while stop_key != "done":
         try:
             target_db_details[count] = {}
-            target_db_details[count]['server'] = input("Enter Target Database Server Address:\t")
-            target_db_details[count]['database'] = input("Enter Target Database Database Name:\t")
-            target_db_details[count]['username'] = input("Enter Target Database Username:\t")
-            target_db_details[count]['password'] = input("Enter Target Database Password:\t")
+            target_db_details[count]["server"] = input(
+                "Enter Target Database Server Address:\t"
+            )
+            target_db_details[count]["database"] = input(
+                "Enter Target Database Database Name:\t"
+            )
+            target_db_details[count]["username"] = input(
+                "Enter Target Database Username:\t"
+            )
+            target_db_details[count]["password"] = input(
+                "Enter Target Database Password:\t"
+            )
 
-            stop_key = input("Press enter to continue to the next target database. Type 'done' and press Enter if you're done.\t")
-
+            stop_key = input(
+                "Press enter to continue to the next target database. Type 'done' and press Enter if you're done.\t"
+            )
 
             count = count + 1
         except Exception as e:
@@ -1438,7 +1450,6 @@ def app2_1() -> None:
     # While loop ends
     source_sps = fetch_stored_procedures(server, database, username, password)
     total_files_before_exclusion = len(source_sps)
-
 
     # Get the list of sql file in source database
     ignore = []
@@ -1455,7 +1466,7 @@ def app2_1() -> None:
         "*_BACKUP*",
         "*_TKT*",
         "*_TICKET*",
-        "*_EXCEL"
+        "*_EXCEL",
     ]
 
     # Remove files with backup in their name (case insensitive)
@@ -1471,9 +1482,9 @@ def app2_1() -> None:
 
     total_files_after_exclusion = len(source_sps)
 
-    number_of_files_excluded = total_files_before_exclusion - total_files_after_exclusion
-
-
+    number_of_files_excluded = (
+        total_files_before_exclusion - total_files_after_exclusion
+    )
 
     # print(fetch_sp_content(source_sps[1], server, database, username, password))
 
@@ -1485,26 +1496,28 @@ def app2_1() -> None:
 
         # Loop through target DBs
         for target_db in target_db_details.values():
-            source_sp_content = fetch_sp_content(sp, server, database, username, password)
+            source_sp_content = fetch_sp_content(
+                sp, server, database, username, password
+            )
             try:
                 target_sp_content = fetch_sp_content(
                     sp,
-                    target_db['server'],
-                    target_db['database'],
-                    target_db['username'],
-                    target_db['password'],
+                    target_db["server"],
+                    target_db["database"],
+                    target_db["username"],
+                    target_db["password"],
                 )
 
                 stripped_source_sp = strip_comments(source_sp_content).upper()
                 stripped_target_sp = strip_comments(target_sp_content).upper()
 
                 if stripped_source_sp == stripped_target_sp:
-                    sp_info[target_db['database']] = "PRESENT & EQUAL"
+                    sp_info[target_db["database"]] = "PRESENT & EQUAL"
                 else:
-                    sp_info[target_db['database']] = "PRESENT & UNEQUAL"
+                    sp_info[target_db["database"]] = "PRESENT & UNEQUAL"
 
             except Exception as e:
-                sp_info[target_db['database']] = "ABSENT"
+                sp_info[target_db["database"]] = "ABSENT"
 
         sp_data.append(sp_info)
 
@@ -1512,12 +1525,14 @@ def app2_1() -> None:
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
     output_excel_file = f"SP_Comparison_Report_Online_{timestamp}.xlsx"
     df.to_excel(output_excel_file, index=False)
-            # Load the existing workbook and sheet
+    # Load the existing workbook and sheet
     wb = load_workbook(output_excel_file)
     ws = wb.active
 
     # Apply cell coloring based on the cell values
-    for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column):
+    for row in ws.iter_rows(
+        min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
+    ):
         for cell in row:
             if cell.value == "PRESENT & UNEQUAL":
                 cell.fill = PatternFill(
@@ -1530,13 +1545,14 @@ def app2_1() -> None:
 
     # Save the modified workbook
     wb.save(output_excel_file)
-    print(f"\n\nExcel file successfully created: {os.path.abspath(output_excel_file)}\n\n")
+    print(
+        f"\n\nExcel file successfully created: {os.path.abspath(output_excel_file)}\n\n"
+    )
     print(f"Total Files: {total_files_before_exclusion}")
     print(f"Files Excluded: {number_of_files_excluded}")
     print(f"Files Considered: {total_files_after_exclusion}")
 
     os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
-
 
 
 def app2():
@@ -1553,6 +1569,7 @@ def app2():
         case _:
             print("Invalid choice. Exiting...")
             sys.exit(1)
+
 
 # ############
 
@@ -1584,16 +1601,8 @@ def main():
             + RESET
             + "Examine the presence of stored procedures across multiple databases, ensuring their mutual existence.\n"
         )
-        print(
-            YELLOW
-            + "\n5. Excluded File Statistics: "
-            + RESET
-        )
-        print(
-            YELLOW
-            + "\n6. Exclude Files Based on Pattern Matching: "
-            + RESET
-        )
+        print(YELLOW + "\n5. Excluded File Statistics: " + RESET)
+        print(YELLOW + "\n6. Exclude Files Based on Pattern Matching: " + RESET)
 
         choice = int(input("Enter your choice:\t"))
         print(f"You have selected option: {choice}.\n")
