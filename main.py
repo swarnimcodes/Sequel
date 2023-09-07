@@ -530,7 +530,7 @@ def fetch_stored_procedures(server, database, username, password) -> list:
 
         cursor.execute(query)
         # rows = cursor.fetchall()  # to get all stored procedures
-        rows = cursor.fetchmany(200)
+        rows = cursor.fetchmany(1000)
 
         for row in rows:
             stored_procedures.append(row[0])
@@ -1639,9 +1639,9 @@ def main():
         elif choice == 6:
             app6()
         elif choice == 7:
-            app7()
+            pass
         elif choice == 8:
-            app8()
+            pass
         else:
             print(
                 RED + "Error: " + RESET + "Please select a valid choice from 1 to 6\n"
