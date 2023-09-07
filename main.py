@@ -7,7 +7,9 @@ import re
 import sys
 from os.path import exists
 
-from openpyxl import Workbook, _WorkbookChild
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import PatternFill
+from openpyxl.worksheet.worksheet import Worksheet
 import nltk
 import numpy as np
 import openpyxl
@@ -1695,11 +1697,11 @@ def app2_3() -> None:
     df.to_excel(excel_file_name, index=False)
     print(f"\n\nExcel Report generated: {os.path.abspath(excel_file_name)}\n\n")
 
-    #TODO: type annotations
+
     # Load the existing workbook and sheet
     wb: Workbook = load_workbook(excel_file_name)
     ws: _WorkbookChild = wb.active
-
+    #TODO: type annotations
     # Apply cell coloring based on the cell values
     for row in ws.iter_rows(
         min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
