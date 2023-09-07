@@ -663,7 +663,7 @@ def difference(source_sql_path, test_sql_path):
 
 
 
-def app2():
+def app2_2() -> None:
     try:
         print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
         source_db_dir = input(
@@ -868,20 +868,7 @@ def app2():
         print(f"An unexpected error occurred: {str(e)}")
 
 
-# def app2():
-#     online = input(
-#         "Do you want to carry out the SP comparison for online databases or offline stored database directories?\nEnter 1 for offline\nEnter 2 for online\nYour choice:\t\t"
-#     ).strip()
-#     online = int(online)
 
-#     match online:
-#         case 1:
-#             app2_1()
-#         case 2:
-#             app2_2()
-#         case _:
-#             print("Invalid choice. Exiting...")
-#             sys.exit(1)
 
 
 # END OF APP 2 #########################################################################
@@ -1417,7 +1404,7 @@ def fetch_sp_content(sp_name, server, database, username, password) -> str:
 
     return sp_content
 
-def app8() -> None:
+def app2_1() -> None:
     print("SP Analyzer Online")
 
     print("Enter Source details:\t")
@@ -1450,6 +1437,43 @@ def app8() -> None:
             print("Error: " + str(e))
     # While loop ends
     source_sps = fetch_stored_procedures(server, database, username, password)
+    total_files_before_exclusion = len(source_sps)
+
+
+    # Get the list of sql file in source database
+    ignore = []
+    ignore = [
+        "*_SWAPNIL*",
+        "*_SQLQUERY*",
+        "*_MIG*",
+        "*_FARHEEN*",
+        "*_SHUBHAM*",
+        "*_CHHAGAN*",
+        "*_TCKT*",
+        "*_tblPivoPOAttainmet*",
+        "*_BK*",
+        "*_BACKUP*",
+        "*_TKT*",
+        "*_TICKET*",
+        "*_EXCEL"
+    ]
+
+    # Remove files with backup in their name (case insensitive)
+    for file in source_sps:
+        for ignore_word in ignore:
+            if fnmatch.fnmatch(file, ignore_word):
+                try:
+                    if file in source_sps:
+                        source_sps.remove(file)
+                except Exception as e:
+                    print(f"{str(e)}")
+                    print(f"Error {ignore_word}, {file}")
+
+    total_files_after_exclusion = len(source_sps)
+
+    number_of_files_excluded = total_files_before_exclusion - total_files_after_exclusion
+
+
 
     # print(fetch_sp_content(source_sps[1], server, database, username, password))
 
@@ -1506,8 +1530,29 @@ def app8() -> None:
 
     # Save the modified workbook
     wb.save(output_excel_file)
-    print(f"Excel file successfully created: {os.path.abspath(output_excel_file)}\n\n")
+    print(f"\n\nExcel file successfully created: {os.path.abspath(output_excel_file)}\n\n")
+    print(f"Total Files: {total_files_before_exclusion}")
+    print(f"Files Excluded: {number_of_files_excluded}")
+    print(f"Files Considered: {total_files_after_exclusion}")
 
+    os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
+
+
+
+def app2():
+    online = input(
+        "Do you want to carry out the SP comparison for online databases or offline stored database directories?\nEnter 1 for online\nEnter 2 for offline\nYour choice:\t\t"
+    ).strip()
+    online = int(online)
+
+    match online:
+        case 1:
+            app2_1()
+        case 2:
+            app2_2()
+        case _:
+            print("Invalid choice. Exiting...")
+            sys.exit(1)
 
 # ############
 
