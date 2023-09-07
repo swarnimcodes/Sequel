@@ -27,14 +27,15 @@ def connect_to_server(server, database, username, password):
     try:
         connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
         connection = pyodbc.connect(connection_string)
-        cursor = connection.cursor()
+        # cursor = connection.cursor()
     except Exception as e:
         print(f"Error: {str(e)}")
 
-    return cursor
+    return connection
 
-def fetch_schema_revamp(server, database, username, password):
-    cursor = connect_to_server(server, database, username, password)
+def fetch_schema_revamp(server, database, username, password) -> dict:
+    connection = connect_to_server(server, database, username, password)
+    cursor = connection.cursor()
     schema_info = {}
 
     query = """
@@ -97,104 +98,108 @@ def fetch_schema_revamp(server, database, username, password):
                 "numeric_scale": numeric_scale,
             }
         )
-        cursor.close()
+
+    cursor.close()
+    connection.close()
+    return schema_info
 
 
-def fetch_schema(server, database, username, password):
-    schema_info = {}
 
-    try:
-        # Establish connection:
-        connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
-        connection = pyodbc.connect(connection_string)
-        cursor = connection.cursor()
+# def fetch_schema(server, database, username, password):
+#     schema_info = {}
 
-        # Fetch Schema
-        # schema_query = """
-        # SELECT
-        #     t.TABLE_SCHEMA,
-        #     t.TABLE_NAME,
-        #     c.COLUMN_NAME,
-        #     c.DATA_TYPE,
-        #     c.CHARACTER_MAXIMUM_LENGTH,
-        #     c.NUMERIC_PRECISION,
-        #     c.NUMERIC_SCALE
-        # FROM INFORMATION_SCHEMA.TABLES AS t
-        # JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
-        # WHERE t.TABLE_TYPE = 'BASE TABLE'
-        # ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
-        # """
+#     try:
+#         # Establish connection:
+#         connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
+#         connection = pyodbc.connect(connection_string)
+#         cursor = connection.cursor()
 
-        schema_query = """
-        SELECT
-        t.TABLE_SCHEMA,
-        t.TABLE_NAME,
-        c.COLUMN_NAME,
-        c.DATA_TYPE,
-        c.CHARACTER_MAXIMUM_LENGTH,
-        c.NUMERIC_PRECISION,
-        c.NUMERIC_SCALE
-        FROM INFORMATION_SCHEMA.TABLES AS t
-        JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
-        WHERE t.TABLE_TYPE = 'BASE TABLE'
-        AND
-        (
-        t.TABLE_NAME NOT LIKE '%BKUP%'
-        AND t.TABLE_NAME NOT LIKE '%BKP%'
-        AND t.TABLE_NAME NOT LIKE '%20%'
-        AND t.TABLE_NAME NOT LIKE '%SWAPNIL%'
-        AND t.TABLE_NAME NOT LIKE '%SQLQUERY%'
-        AND t.TABLE_NAME NOT LIKE '%FARHEEN%'
-        AND t.TABLE_NAME NOT LIKE '%SHUBHAM%'
-        AND t.TABLE_NAME NOT LIKE '%CHHAGAN%'
-        AND t.TABLE_NAME NOT LIKE '%TCKT%'
-        AND t.TABLE_NAME NOT LIKE '%MIGRATION%'
-        AND t.TABLE_NAME NOT LIKE '%MIGR%'
-        AND t.TABLE_NAME NOT LIKE '%TID%'
-        AND t.TABLE_NAME NOT LIKE '%tblPivoPOAttainmet%'
-        AND t.TABLE_NAME NOT LIKE '%BK%'
-        AND t.TABLE_NAME NOT LIKE '%BACKUP%'
-        AND t.TABLE_NAME NOT LIKE '%TKT%'
-        AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
-        AND t.TABLE_NAME NOT LIKE '%TICKET%'
-        AND t.TABLE_NAME NOT LIKE '%MIG%'
-        )
-        ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
-        """
+#         # Fetch Schema
+#         # schema_query = """
+#         # SELECT
+#         #     t.TABLE_SCHEMA,
+#         #     t.TABLE_NAME,
+#         #     c.COLUMN_NAME,
+#         #     c.DATA_TYPE,
+#         #     c.CHARACTER_MAXIMUM_LENGTH,
+#         #     c.NUMERIC_PRECISION,
+#         #     c.NUMERIC_SCALE
+#         # FROM INFORMATION_SCHEMA.TABLES AS t
+#         # JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+#         # WHERE t.TABLE_TYPE = 'BASE TABLE'
+#         # ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
+#         # """
 
-        print("\nExecuting the schema query. Please wait...\n")
-        cursor.execute(schema_query)
-        print("Schema query execution" + GREEN + " completed" + RESET + ".\n")
-        rows = cursor.fetchall()
+#         schema_query = """
+#         SELECT
+#         t.TABLE_SCHEMA,
+#         t.TABLE_NAME,
+#         c.COLUMN_NAME,
+#         c.DATA_TYPE,
+#         c.CHARACTER_MAXIMUM_LENGTH,
+#         c.NUMERIC_PRECISION,
+#         c.NUMERIC_SCALE
+#         FROM INFORMATION_SCHEMA.TABLES AS t
+#         JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+#         WHERE t.TABLE_TYPE = 'BASE TABLE'
+#         AND
+#         (
+#         t.TABLE_NAME NOT LIKE '%BKUP%'
+#         AND t.TABLE_NAME NOT LIKE '%BKP%'
+#         AND t.TABLE_NAME NOT LIKE '%20%'
+#         AND t.TABLE_NAME NOT LIKE '%SWAPNIL%'
+#         AND t.TABLE_NAME NOT LIKE '%SQLQUERY%'
+#         AND t.TABLE_NAME NOT LIKE '%FARHEEN%'
+#         AND t.TABLE_NAME NOT LIKE '%SHUBHAM%'
+#         AND t.TABLE_NAME NOT LIKE '%CHHAGAN%'
+#         AND t.TABLE_NAME NOT LIKE '%TCKT%'
+#         AND t.TABLE_NAME NOT LIKE '%MIGRATION%'
+#         AND t.TABLE_NAME NOT LIKE '%MIGR%'
+#         AND t.TABLE_NAME NOT LIKE '%TID%'
+#         AND t.TABLE_NAME NOT LIKE '%tblPivoPOAttainmet%'
+#         AND t.TABLE_NAME NOT LIKE '%BK%'
+#         AND t.TABLE_NAME NOT LIKE '%BACKUP%'
+#         AND t.TABLE_NAME NOT LIKE '%TKT%'
+#         AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
+#         AND t.TABLE_NAME NOT LIKE '%TICKET%'
+#         AND t.TABLE_NAME NOT LIKE '%MIG%'
+#         )
+#         ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
+#         """
 
-        for row in rows:
-            table_schema = row.TABLE_SCHEMA
-            table_name = row.TABLE_NAME
-            column_name = row.COLUMN_NAME
-            data_type = row.DATA_TYPE
-            max_length = row.CHARACTER_MAXIMUM_LENGTH
-            numeric_precision = row.NUMERIC_PRECISION
-            numeric_scale = row.NUMERIC_SCALE
+#         print("\nExecuting the schema query. Please wait...\n")
+#         cursor.execute(schema_query)
+#         print("Schema query execution" + GREEN + " completed" + RESET + ".\n")
+#         rows = cursor.fetchall()
 
-            schema_info.setdefault(table_schema, {}).setdefault(table_name, []).append(
-                {
-                    "column_name": column_name,
-                    "data_type": data_type,
-                    "max_length": max_length,
-                    "numeric_precision": numeric_precision,
-                    "numeric_scale": numeric_scale,
-                }
-            )
+#         for row in rows:
+#             table_schema = row.TABLE_SCHEMA
+#             table_name = row.TABLE_NAME
+#             column_name = row.COLUMN_NAME
+#             data_type = row.DATA_TYPE
+#             max_length = row.CHARACTER_MAXIMUM_LENGTH
+#             numeric_precision = row.NUMERIC_PRECISION
+#             numeric_scale = row.NUMERIC_SCALE
 
-        connection.close()
+#             schema_info.setdefault(table_schema, {}).setdefault(table_name, []).append(
+#                 {
+#                     "column_name": column_name,
+#                     "data_type": data_type,
+#                     "max_length": max_length,
+#                     "numeric_precision": numeric_precision,
+#                     "numeric_scale": numeric_scale,
+#                 }
+#             )
 
-        return schema_info
-    except pyodbc.Error as e:
-        raise Exception(RED + "Error " + RESET + f"while fetching schema: {str(e)}")
-    except Exception as ex:
-        raise Exception(
-            "An" + RED + " unexpected error " + RESET + f"occurred: {str(ex)}"
-        )
+#         connection.close()
+
+#         return schema_info
+#     except pyodbc.Error as e:
+#         raise Exception(RED + "Error " + RESET + f"while fetching schema: {str(e)}")
+#     except Exception as ex:
+#         raise Exception(
+#             "An" + RED + " unexpected error " + RESET + f"occurred: {str(ex)}"
+#         )
 
 
 def generate_excel_report(workbook, source_schema, target_schema, target_db_name):
@@ -237,7 +242,7 @@ def generate_excel_report(workbook, source_schema, target_schema, target_db_name
         row = row + 1
 
 
-def perform_schema_comparison(source_schema, target_schema):
+def perform_schema_comparison(source_schema, target_schema) -> list:
     comparison_results = []
     for schema in source_schema:
         for table_name in source_schema[schema]:
@@ -297,7 +302,7 @@ def perform_schema_comparison(source_schema, target_schema):
     return comparison_results
 
 
-def app1():
+def app1() -> None:
     try:
         print("Enter details of" + GREEN + " SOURCE " + RESET + "database: ")
         source_info = {
@@ -338,7 +343,7 @@ def app1():
         print("Fetching Source Information... \n")
 
         try:
-            source_schema = fetch_schema(
+            source_schema = fetch_schema_revamp(
                 source_server, source_database, source_username, source_password
             )  # has information regarding source schema
         except Exception as e:
@@ -430,7 +435,7 @@ def app1():
                 )
             else:
                 try:
-                    target_schema = fetch_schema(
+                    target_schema = fetch_schema_revamp(
                         target_server, target_database, target_username, target_password
                     )
                     generate_excel_report(
@@ -511,28 +516,27 @@ def app1():
 # END OF APP 1 #########################################################################
 
 
-def fetch_stored_procedures(server, database, username, password):
+def fetch_stored_procedures(server, database, username, password) -> list:
     stored_procedures = []
 
     try:
-        # Establish a connection to the database
-        connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
-        connection = pyodbc.connect(connection_string)
+        connection = connect_to_server(server, database, username, password)
         cursor = connection.cursor()
 
         # Fetch stored procedures
         query = """
         SELECT name
         FROM sys.procedures
-        WHERE type_desc = 'SQL_STORED_PROCEDURE'
         """
 
         cursor.execute(query)
-        rows = cursor.fetchall()
+        # rows = cursor.fetchall()  # to get all stored procedures
+        rows = cursor.fetchmany(1000)
 
         for row in rows:
             stored_procedures.append(row[0])
 
+        cursor.close()
         connection.close()
 
     except pyodbc.Error as e:
@@ -541,7 +545,7 @@ def fetch_stored_procedures(server, database, username, password):
     return stored_procedures
 
 
-def strip_comments(sql_file_contents):
+def strip_comments(sql_file_contents) -> str:
     try:
         stripped_sql_file = re.sub(r"--.*", "", sql_file_contents)
         stripped_sql_file = re.sub(r"/\*.*?\*/", "", stripped_sql_file, flags=re.DOTALL)
@@ -557,38 +561,46 @@ def strip_comments(sql_file_contents):
     return stripped_sql_file
 
 
-def strip_comments_after_create(sql_file_contents):
-    try:
-        # Split the SQL content into lines
-        lines = sql_file_contents.splitlines()
-        create_found = False
-        stripped_lines = []
 
-        for line in lines:
-            # Check if the line contains "CREATE" (case-insensitive)
-            if not create_found and re.search(r"\bCREATE\b", line, re.IGNORECASE):
-                create_found = True
-                continue
+## This function is supposed to ignore lines before the word "Create"
+## This is useful but has a few caveats such as what if there is the word create
+## in the comments before the actual statement that creates the procedure
+## also this does not check the differences on the line itself
+## Ideally should check after the second square bracket
+## Example: CREATE      PROCEDURE [PR_ACD_SECTION_MASTER_SHOW_MULTI_MASTERS] abcd
 
-            if create_found:
-                # Remove comments from the line
-                line = re.sub(r"--.*", "", line)
-                line = re.sub(r"/\*.*?\*/", "", line, flags=re.DOTALL)
-                line = line.strip()  # Remove leading/trailing whitespace
-                if line:
-                    stripped_lines.append(line)
+# def strip_comments_after_create(sql_file_contents):
+#     try:
+#         # Split the SQL content into lines
+#         lines = sql_file_contents.splitlines()
+#         create_found = False
+#         stripped_lines = []
 
-        # Join the stripped lines to form the SQL content
-        stripped_sql_file = "\n".join(stripped_lines)
+#         for line in lines:
+#             # Check if the line contains "CREATE" (case-insensitive)
+#             if not create_found and re.search(r"\bCREATE\b", line, re.IGNORECASE):
+#                 create_found = True
+#                 continue
 
-    except Exception as e:
-        print(f"Error while stripping comments: {str(e)}")
-        stripped_sql_file = ""
+#             if create_found:
+#                 # Remove comments from the line
+#                 line = re.sub(r"--.*", "", line)
+#                 line = re.sub(r"/\*.*?\*/", "", line, flags=re.DOTALL)
+#                 line = line.strip()  # Remove leading/trailing whitespace
+#                 if line:
+#                     stripped_lines.append(line)
 
-    return stripped_sql_file
+#         # Join the stripped lines to form the SQL content
+#         stripped_sql_file = "\n".join(stripped_lines)
+
+#     except Exception as e:
+#         print(f"Error while stripping comments: {str(e)}")
+#         stripped_sql_file = ""
+
+#     return stripped_sql_file
 
 
-def difference_app2(source_sql_path, test_sql_path) -> bool:
+def difference_app2(source_sql_path, test_sql_path):
     try:
         try:
             with open(source_sql_path, "r", encoding="utf-8") as file:
@@ -605,8 +617,8 @@ def difference_app2(source_sql_path, test_sql_path) -> bool:
                 test_contents = file.read().upper()
 
         # Remove comments without normalizing whitespace
-        stripped_sql_file_source = strip_comments_after_create(source_contents)
-        stripped_sql_file_test = strip_comments_after_create(test_contents)
+        stripped_sql_file_source = strip_comments(source_contents)
+        stripped_sql_file_test = strip_comments(test_contents)
 
         if stripped_sql_file_source == stripped_sql_file_test:
             return True
@@ -617,7 +629,7 @@ def difference_app2(source_sql_path, test_sql_path) -> bool:
         print(f"Error while comparing SQL Files: {str(e)}")
 
 
-def difference(source_sql_path, test_sql_path) -> bool:
+def difference(source_sql_path, test_sql_path):
     try:
         try:
             with open(source_sql_path, "r", encoding="utf-8") as file:
@@ -649,38 +661,6 @@ def difference(source_sql_path, test_sql_path) -> bool:
     except Exception as e:
         print(f"Error while comparing SQL Files: {str(e)}")
 
-
-def download_stored_procedure(
-    server, database, username, password, sp_name, output_file_path
-):
-    try:
-        # Establish a connection to the SQL Server
-        connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
-        connection = pyodbc.connect(connection_string)
-        cursor = connection.cursor()
-
-        # Define a query to fetch the stored procedure text
-        query = f"EXEC sp_helptext '{sp_name}'"
-
-        # Execute the query to fetch the stored procedure text
-        cursor.execute(query)
-
-        # Fetch all lines of the stored procedure
-        stored_procedure_text = "\n".join([row[0] for row in cursor.fetchall()])
-
-        # Write the stored procedure text to the output file
-        with open(output_file_path, "w", encoding="utf-8") as output_file:
-            output_file.write(stored_procedure_text)
-
-        print(f"Stored procedure '{sp_name}' downloaded to '{output_file_path}'.")
-
-        # Close the connection
-        connection.close()
-
-    except pyodbc.Error as e:
-        print(f"Error: {str(e)}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {str(e)}")
 
 
 def app2():
@@ -839,9 +819,7 @@ def app2():
         ws = wb.active
 
         # Apply cell coloring based on the cell values
-        for row in ws.iter_rows(
-            min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
-        ):
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column):
             for cell in row:
                 if cell.value == "PRESENT & UNEQUAL":
                     cell.fill = PatternFill(
@@ -1053,8 +1031,7 @@ def app3():
                 normalized_sql_2 = normalize_sql(file2_contents)
                 file2_nocomments = strip_sql_comments(normalized_sql_2)
 
-                # TODO implement difference
-                if difference(file1_path, file2_path):
+                if difference(file1_path, file2_path):  # TODO: use the new difference function to avoid duplication
                     content_comparison = "Equal"
                     # print(f"Files {sql_file} are equal")
                 else:
@@ -1085,7 +1062,7 @@ def app3():
                 ]
             )
 
-    # TODO: add functionality where it shows what sp is not present in which db
+    # DONE: add functionality where it shows what sp is not present in which db
     for sql_file in os.listdir(folder2_path):
         sp_name = sql_file
         if sql_file.endswith(".sql"):
@@ -1409,7 +1386,7 @@ def app6():
     for file in included_files:
         cell = ws[column_letter1 + str(ws.max_row + 1)]
         cell.value = file
-    
+
     column_letter2 = 'B'
     for file in excluded_files:
         cell = ws[column_letter2 + str(ws.max_row + 1)]
@@ -1425,6 +1402,114 @@ def app6():
 
 
 # ###############
+
+def fetch_sp_content(sp_name, server, database, username, password) -> str:
+    connection = connect_to_server(server, database, username, password)
+    cursor = connection.cursor()
+
+    # query = f"sp_helptext {sp_name}"
+    query = f"sp_helptext [{sp_name}]"
+
+    cursor.execute(query)
+
+    sp_content_list = cursor.fetchall()
+    sp_content = '\n'.join(line[0].strip() for line in sp_content_list)
+
+    return sp_content
+
+def app8() -> None:
+    print("SP Analyzer Online")
+
+    print("Enter Source details:\t")
+    server = input("Enter Server Address:\t")
+    database = input("Enter Database Name:\t")
+    username = input("Enter User Name:\t")
+    password = input("Enter Password:\t")
+
+    print("Enter Target Database Details:\t")
+    print("The program will continue to ask for information until you type 'done' and press Enter when it asks.\n\n")
+
+    stop_key = "not done"
+    count = 1
+
+    target_db_details = {}
+
+    while stop_key != "done":
+        try:
+            target_db_details[count] = {}
+            target_db_details[count]['server'] = input("Enter Target Database Server Address:\t")
+            target_db_details[count]['database'] = input("Enter Target Database Database Name:\t")
+            target_db_details[count]['username'] = input("Enter Target Database Username:\t")
+            target_db_details[count]['password'] = input("Enter Target Database Password:\t")
+
+            stop_key = input("Press enter to continue to the next target database. Type 'done' and press Enter if you're done.\t")
+
+
+            count = count + 1
+        except Exception as e:
+            print("Error: " + str(e))
+    # While loop ends
+    source_sps = fetch_stored_procedures(server, database, username, password)
+
+    # print(fetch_sp_content(source_sps[1], server, database, username, password))
+
+    sp_data = []
+
+    # Loop through source SPs
+    for sp in tqdm(source_sps):
+        sp_info = {"SP Name": sp}
+
+        # Loop through target DBs
+        for target_db in target_db_details.values():
+            source_sp_content = fetch_sp_content(sp, server, database, username, password)
+            try:
+                target_sp_content = fetch_sp_content(
+                    sp,
+                    target_db['server'],
+                    target_db['database'],
+                    target_db['username'],
+                    target_db['password'],
+                )
+
+                stripped_source_sp = strip_comments(source_sp_content).upper()
+                stripped_target_sp = strip_comments(target_sp_content).upper()
+
+                if stripped_source_sp == stripped_target_sp:
+                    sp_info[target_db['database']] = "PRESENT & EQUAL"
+                else:
+                    sp_info[target_db['database']] = "PRESENT & UNEQUAL"
+
+            except Exception as e:
+                sp_info[target_db['database']] = "ABSENT"
+
+        sp_data.append(sp_info)
+
+    df = pd.DataFrame(sp_data)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    output_excel_file = f"SP_Comparison_Report_Online_{timestamp}.xlsx"
+    df.to_excel(output_excel_file, index=False)
+            # Load the existing workbook and sheet
+    wb = load_workbook(output_excel_file)
+    ws = wb.active
+
+    # Apply cell coloring based on the cell values
+    for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column):
+        for cell in row:
+            if cell.value == "PRESENT & UNEQUAL":
+                cell.fill = PatternFill(
+                    start_color="FCD5B4", end_color="FCD5B4", fill_type="solid"
+                )
+            elif cell.value == "ABSENT":
+                cell.fill = PatternFill(
+                    start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
+                )
+
+    # Save the modified workbook
+    wb.save(output_excel_file)
+    print(f"Excel file successfully created: {os.path.abspath(output_excel_file)}\n\n")
+
+
+# ############
 
 
 def main():
@@ -1456,11 +1541,16 @@ def main():
         )
         print(
             YELLOW
-            + "5. Excluded File Statistics: "
+            + "\n5. Excluded File Statistics: "
+            + RESET
+        )
+        print(
+            YELLOW
+            + "\n6. Exclude Files Based on Pattern Matching: "
             + RESET
         )
 
-        choice = int(input("Enter your choice: \t"))
+        choice = int(input("Enter your choice:\t"))
         print(f"You have selected option: {choice}.\n")
 
         if choice == 1:
@@ -1475,6 +1565,10 @@ def main():
             app5()
         elif choice == 6:
             app6()
+        elif choice == 7:
+            app7()
+        elif choice == 8:
+            app8()
         else:
             print(
                 RED + "Error: " + RESET + "Please select a valid choice from 1 to 6\n"
