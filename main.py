@@ -660,7 +660,7 @@ def difference(source_sql_path, test_sql_path):
         print(f"Error while comparing SQL Files: {str(e)}")
 
 
-def app2_3() -> None:
+def app2_4() -> None:
     try:
         print("Enter details of your" + GREEN + " Source Database " + RESET + ":\n")
         source_db_dir = input(
@@ -1545,123 +1545,6 @@ def app2_1() -> None:
     os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
 # ################
 
-# def app2_2() -> None:
-    print(f"\n\nOnline SP Presence Analyser for Multiple Databases\n\n")
-    print("This program will run as long as you dont enter done when asked for")
-
-    stop_key = "not done"
-    count = 1
-
-    database_details = {}
-    sp_data = []
-
-    while stop_key != "done":
-        try:
-            database_details[count] = {}
-            database_details[count]["server"] = input(
-                "Enter Database Server Address:\t"
-            )
-            database_details[count]["database"] = input(
-                "Enter Database Database Name:\t"
-            )
-            database_details[count]["username"] = input(
-                "Enter Database Username:\t"
-            )
-            database_details[count]["password"] = input(
-                "Enter Database Password:\t"
-            )
-
-            stop_key = input(
-                "Press Enter to continue to the next database. Type 'done' and press Enter if you're done.\t"
-            )
-
-            count = count + 1
-        except Exception as e:
-            print("Error: " + str(e))
-    # While loop ends
-
-    # Create an empty list to store all stored procedure names
-    all_sp_names = []
-
-    # Iterate through your database details
-    for count, database_detail in database_details.items():
-        server = database_detail['server']
-        database = database_detail['database']
-        username = database_detail['username']
-        password = database_detail['password']
-
-        # Fetch stored procedure names for the current database
-        sp_names = fetch_stored_procedures(server, database, username, password)
-
-        # Extend the all_sp_names list with the names from the current database
-        all_sp_names.extend(sp_names)
-
-    # Remove duplicates by converting the list to a set and back to a list
-    superset_sp_names = list(set(all_sp_names))
-    total_files_before_exclusion = len(superset_sp_names)
-
-    ignore = []
-    ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
-    with open(ignore_file_path, "r") as f:
-        ignore = f.read().splitlines()
-
-    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
-
-    # Create a regular expression pattern to match ignore patterns
-    ignore_pattern = "|".join(ignore_patterns_list)
-    ignore_pattern = f"({ignore_pattern})"
-
-    # Exclusion based on pattern matching file
-
-    for file in superset_sp_names:
-        if re.match(ignore_pattern, file):
-            superset_sp_names.remove(file)
-
-    total_files_after_exclusion = len(superset_sp_names)
-    number_of_files_excluded = total_files_before_exclusion - total_files_after_exclusion
-
-    for sp in tqdm(superset_sp_names):
-        sp_info = {"SP Name": sp}
-        for count, database_detail in database_details.items():
-            server = database_detail['server']
-            database = database_detail['database']
-            username = database_detail['username']
-            password = database_detail['password']
-
-            current_db_sp_list = fetch_stored_procedures(server, database, username, password)
-            if sp in current_db_sp_list:
-                sp_info[database_detail["database"]] = "PRESENT"
-            else:
-                sp_info[database_detail["database"]] = "ABSENT"
-
-        sp_data.append(sp_info)
-
-    df = pd.DataFrame(sp_data)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
-    output_excel_file = f"SP_Presence_Report_Online_{timestamp}.xlsx"
-    df.to_excel(output_excel_file, index=False)
-    wb = load_workbook(output_excel_file)
-    ws = wb.active
-
-    # Apply cell coloring based on the cell values
-    for row in ws.iter_rows(
-        min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
-    ):
-        for cell in row:
-            if cell.value == "ABSENT":
-                cell.fill = PatternFill(
-                    start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
-                )
-    # Save the modified workbook
-    wb.save(output_excel_file)
-    print(
-        f"\n\nExcel file successfully created: {os.path.abspath(output_excel_file)}\n\n"
-    )
-    print(f"Total Files: {total_files_before_exclusion}")
-    print(f"Files Excluded: {number_of_files_excluded}")
-    print(f"Files Considered: {total_files_after_exclusion}")
-
-    os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
 
 def get_database_details():
     database_details = []
@@ -1709,7 +1592,7 @@ def app2_2() -> None:
 
     ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
     ignore = []
-    
+
     with open(ignore_file_path, "r") as f:
         ignore = f.read().splitlines()
 
@@ -1772,9 +1655,49 @@ def app2_2() -> None:
 
 
 # ###################
+def app2_3() -> None:
+    print(f"\n\nOffline SP Presence Analyzer for Multiple Databases\n\n")
+    print("This program will run as long as you don't enter 'done' when asked for")
+
+    truth: bool = True
+    db_list: list[str] = []
+
+    while truth:
+        temporary: str = input("\nEnter directory location for next database:\t")
+        if temporary != 'done':
+            db_list.append(temporary)
+        else:
+            truth = False
+    # while loop ends
+
+    non_unique_sp_list: list[str] = []
+    for db in db_list:
+        for sp in os.listdir(db):
+            non_unique_sp_list.append(sp)
+    # for loop ends
+
+    unique_sp_list: list[str] = list(set(non_unique_sp_list))
+    print(unique_sp_list)
+
+    for sp in unique_sp_list:
+        for db in db_list:
+            sp_in_current_db: list[str] = os.listdir(db)
+            if sp in sp_in_current_db:
+                print(f"{sp} present in {db}")
+            else:
+                print(f"{sp} absent in {db}")
+
+
+
+
+
+
+# ###################
+
+
 
 def app2():
-    online = input("\n\n1. Online SP Comparator among multiple databases. Compares contents as well. Comparison done against a source.\n2. Online SP Presence Analyser among multiple databases. Makes a superset of all SPs and checks which SP is absent in what database.\n3. Offline SP Comparator among multiple databases. Comparison done against a source.").strip()
+    online = input("\n\n1. Online SP Comparator among multiple databases. Compares contents as well. Comparison done against a source.\n2. Online SP Presence Analyser among multiple databases. Makes a superset of all SPs and checks which SP is absent in what database.\n3. Offline SP Presence Analyzer for multiple databases. Superset is made. No content comparison is done.\n4. Offline SP Comparator among multiple databases. Comparison done against a source.\nEnter your choice:\t").strip()
     online = int(online)
 
     match online:
@@ -1784,6 +1707,8 @@ def app2():
             app2_2()
         case 3:
             app2_3()
+        case 4:
+            app2_4()
         case _:
             print("Invalid choice. Exiting...")
             sys.exit(1)
