@@ -7,6 +7,7 @@ import re
 import sys
 from os.path import exists
 
+from openpyxl import Workbook, _WorkbookChild
 import nltk
 import numpy as np
 import openpyxl
@@ -1677,16 +1678,40 @@ def app2_3() -> None:
     # for loop ends
 
     unique_sp_list: list[str] = list(set(non_unique_sp_list))
-    print(unique_sp_list)
 
-    for sp in unique_sp_list:
-        for db in db_list:
-            sp_in_current_db: list[str] = os.listdir(db)
-            if sp in sp_in_current_db:
-                print(f"{sp} present in {db}")
-            else:
-                print(f"{sp} absent in {db}")
+    data: dict[str, list[str]] = {'SP Name': unique_sp_list}
+    for db in db_list:
+        sps_in_current_db: list[str] = os.listdir(db)
+        presence: list[bool] = [sp in sps_in_current_db for sp in unique_sp_list]
+        data[os.path.basename(db)] = ['PRESENT' if p else 'ABSENT' for p in presence]
+    # for loop ends
 
+    df: pd.DataFrame = pd.DataFrame(data)
+    print(type(df))
+
+    timestamp: str = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    excel_file_name: str = f"SP_Presence_Offline_Report_{timestamp}.xlsx"
+
+    df.to_excel(excel_file_name, index=False)
+    print(f"\n\nExcel Report generated: {os.path.abspath(excel_file_name)}\n\n")
+
+    #TODO: type annotations
+    # Load the existing workbook and sheet
+    wb: Workbook = load_workbook(excel_file_name)
+    ws: _WorkbookChild = wb.active
+
+    # Apply cell coloring based on the cell values
+    for row in ws.iter_rows(
+        min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
+    ):
+        for cell in row:
+            if cell.value == "ABSENT":
+                cell.fill = PatternFill(
+                    start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
+                    )
+
+    # Save the modified workbook
+    wb.save(excel_file_name)
 
 
 
