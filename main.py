@@ -1545,7 +1545,7 @@ def app2_1() -> None:
     os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
 # ################
 
-def app2_2() -> None:
+# def app2_2() -> None:
     print(f"\n\nOnline SP Presence Analyser for Multiple Databases\n\n")
     print("This program will run as long as you dont enter done when asked for")
 
@@ -1663,6 +1663,112 @@ def app2_2() -> None:
 
     os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
 
+def get_database_details():
+    database_details = []
+    while True:
+        server = input("Enter Database Server Address (or 'done' to finish):\t")
+        if server.lower() == 'done':
+            break
+        database = input("Enter Database Name:\t")
+        username = input("Enter Database Username:\t")
+        password = input("Enter Database Password:\t")
+        database_details.append({
+            "server": server,
+            "database": database,
+            "username": username,
+            "password": password
+        })
+    return database_details
+
+
+def app2_2() -> None:
+    print(f"\n\nOnline SP Presence Analyzer for Multiple Databases\n\n")
+    print("This program will run as long as you don't enter 'done' when asked for")
+
+    database_details = get_database_details()
+    total_files_before_exclusion = 0
+
+    # Create an empty list to store all stored procedure names
+    all_sp_names = []
+
+    for database_detail in database_details:
+        server = database_detail['server']
+        database = database_detail['database']
+        username = database_detail['username']
+        password = database_detail['password']
+
+        # Fetch stored procedure names for the current database
+        sp_names = fetch_stored_procedures(server, database, username, password)
+
+        # Extend the all_sp_names list with the names from the current database
+        all_sp_names.extend(sp_names)
+
+    # Remove duplicates by converting the list to a set and back to a list
+    superset_sp_names = list(set(all_sp_names))
+    total_files_before_exclusion = len(superset_sp_names)
+
+    ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
+    ignore = []
+    
+    with open(ignore_file_path, "r") as f:
+        ignore = f.read().splitlines()
+
+    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
+
+    # Create a regular expression pattern to match ignore patterns
+    ignore_pattern = "|".join(ignore_patterns_list)
+    ignore_pattern = f"({ignore_pattern})"
+
+    # Exclusion based on pattern matching file
+    superset_sp_names = [sp for sp in superset_sp_names if not re.match(ignore_pattern, sp)]
+
+    total_files_after_exclusion = len(superset_sp_names)
+    number_of_files_excluded = total_files_before_exclusion - total_files_after_exclusion
+
+    sp_data = []
+
+    for sp in tqdm(superset_sp_names):
+        sp_info = {"SP Name": sp}
+        for database_detail in database_details:
+            server = database_detail['server']
+            database = database_detail['database']
+            username = database_detail['username']
+            password = database_detail['password']
+
+            current_db_sp_list = fetch_stored_procedures(server, database, username, password)
+            if sp in current_db_sp_list:
+                sp_info[database_detail["database"]] = "PRESENT"
+            else:
+                sp_info[database_detail["database"]] = "ABSENT"
+
+        sp_data.append(sp_info)
+
+    df = pd.DataFrame(sp_data)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    output_excel_file = f"SP_Presence_Report_Online_{timestamp}.xlsx"
+    df.to_excel(output_excel_file, index=False)
+    wb = load_workbook(output_excel_file)
+    ws = wb.active
+
+    # Apply cell coloring based on the cell values
+    for row in ws.iter_rows(
+        min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
+    ):
+        for cell in row:
+            if cell.value == "ABSENT":
+                cell.fill = PatternFill(
+                    start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
+                )
+    # Save the modified workbook
+    wb.save(output_excel_file)
+    print(
+        f"\n\nExcel file successfully created: {os.path.abspath(output_excel_file)}\n\n"
+    )
+    print(f"Total Files: {total_files_before_exclusion}")
+    print(f"Files Excluded: {number_of_files_excluded}")
+    print(f"Files Considered: {total_files_after_exclusion}")
+
+    os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
 
 
 # ###################
