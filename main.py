@@ -1,22 +1,17 @@
-import codecs
 import datetime
 import difflib
 import fnmatch
 import os
 import re
 import sys
-from os.path import exists
+# from os.path import exists
 
-from openpyxl import Workbook, load_workbook
-from openpyxl.styles import PatternFill
-from openpyxl.worksheet.worksheet import Worksheet
 import nltk
-import numpy as np
 import openpyxl
 import pandas as pd
 import pyodbc
 import sqlparse
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill
 from tqdm import tqdm
 
@@ -570,35 +565,35 @@ def strip_comments(sql_file_contents) -> str:
 ## Ideally should check after the second square bracket
 ## Example: CREATE      PROCEDURE [PR_ACD_SECTION_MASTER_SHOW_MULTI_MASTERS] abcd
 
-# def strip_comments_after_create(sql_file_contents):
-#     try:
-#         # Split the SQL content into lines
-#         lines = sql_file_contents.splitlines()
-#         create_found = False
-#         stripped_lines = []
+def strip_comments_after_create(sql_file_contents):
+    try:
+        # Split the SQL content into lines
+        lines = sql_file_contents.splitlines()
+        create_found = False
+        stripped_lines = []
 
-#         for line in lines:
-#             # Check if the line contains "CREATE" (case-insensitive)
-#             if not create_found and re.search(r"\bCREATE\b", line, re.IGNORECASE):
-#                 create_found = True
-#                 continue
+        for line in lines:
+            # Check if the line contains "CREATE" (case-insensitive)
+            if not create_found and re.search(r"\bCREATE\b", line, re.IGNORECASE):
+                create_found = True
+                continue
 
-#             if create_found:
-#                 # Remove comments from the line
-#                 line = re.sub(r"--.*", "", line)
-#                 line = re.sub(r"/\*.*?\*/", "", line, flags=re.DOTALL)
-#                 line = line.strip()  # Remove leading/trailing whitespace
-#                 if line:
-#                     stripped_lines.append(line)
+            if create_found:
+                # Remove comments from the line
+                line = re.sub(r"--.*", "", line)
+                line = re.sub(r"/\*.*?\*/", "", line, flags=re.DOTALL)
+                line = line.strip()  # Remove leading/trailing whitespace
+                if line:
+                    stripped_lines.append(line)
 
-#         # Join the stripped lines to form the SQL content
-#         stripped_sql_file = "\n".join(stripped_lines)
+        # Join the stripped lines to form the SQL content
+        stripped_sql_file = "\n".join(stripped_lines)
 
-#     except Exception as e:
-#         print(f"Error while stripping comments: {str(e)}")
-#         stripped_sql_file = ""
+    except Exception as e:
+        print(f"Error while stripping comments: {str(e)}")
+        stripped_sql_file = ""
 
-#     return stripped_sql_file
+    return stripped_sql_file
 
 
 def difference_app2(source_sql_path, test_sql_path):
@@ -618,8 +613,8 @@ def difference_app2(source_sql_path, test_sql_path):
                 test_contents = file.read().upper()
 
         # Remove comments without normalizing whitespace
-        stripped_sql_file_source = strip_comments(source_contents)
-        stripped_sql_file_test = strip_comments(test_contents)
+        stripped_sql_file_source = strip_comments_after_create(source_contents)
+        stripped_sql_file_test = strip_comments_after_create(test_contents)
 
         if stripped_sql_file_source == stripped_sql_file_test:
             return True
@@ -751,33 +746,29 @@ def app2_4() -> None:
 
         # Get the list of sql file in source database
         source_sql_file_list = os.listdir(source_db_dir)
-        ignore = []
-        ignore = [
-            "*_SWAPNIL*",
-            "*_SQLQUERY*",
-            "*_MIG*",
-            "*_FARHEEN*",
-            "*_SHUBHAM*",
-            "*_CHHAGAN*",
-            "*_TCKT*",
-            "*_tblPivoPOAttainmet*",
-            "*_BK*",
-            "*_BACKUP*",
-            "*_TKT*",
-            "*_TICKET*",
-            "*_EXCEL",
-        ]
+        total_files_before_exclusion = len(source_sql_file_list)
 
-        # Remove files with backup in their name (case insensitive)
-        for file in source_sql_file_list:
-            for ignore_word in ignore:
-                if fnmatch.fnmatch(file, ignore_word):
-                    try:
-                        if os.path.exists(file):
-                            source_sql_file_list.remove(file)
-                    except Exception as e:
-                        print(f"{str(e)}")
-                        print(f"Error {ignore_word}, {file}")
+        ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
+
+        with open(ignore_file_path, "r") as f:
+            ignore = f.read().splitlines()
+
+        additional_ignore_list = ['*.mig*', '*sqlquery*', '*2022*', '*2023*', '*backup*']
+
+        ignore.extend(additional_ignore_list)
+        ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
+
+
+        # Create a regular expression pattern to match ignore patterns
+        ignore_pattern = "|".join(ignore_patterns_list)
+        ignore_pattern = f"({ignore_pattern})"
+
+        # Exclusion based on pattern matching file
+        source_sql_file_list_excl = [sp for sp in source_sql_file_list if not re.match(ignore_pattern, sp.upper())]
+
+        total_files_after_exclusion = len(source_sql_file_list_excl)
+        number_of_files_excluded = total_files_before_exclusion - total_files_after_exclusion
+
 
         summary = {}
 
@@ -788,9 +779,9 @@ def app2_4() -> None:
                 "Present & Equal Entries": 0,
             }
 
-        for sql_file in source_sql_file_list:
+        for sql_file in tqdm(source_sql_file_list_excl):
             sp_name = sql_file[:-4]  # Remove the .sql extension
-            sp_info = {"SP Name": sp_name}
+            sp_info = {"SQL File": sp_name}
             source_sql_path = os.path.join(source_db_dir, sql_file)
 
             for target_db_dir in target_db_dirs:
@@ -863,6 +854,12 @@ def app2_4() -> None:
             + f"Excel Report has been generated at {excel_absolute_path}\n"
         )
         os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
+
+        print("\n\nSummary or Exclusion:\n")
+        print(f"Total Files: {total_files_before_exclusion}")
+        print(f"Included Files: {total_files_after_exclusion}")
+        print(f"Excluded Files: {number_of_files_excluded}")
+
         input("Press Enter to exit...")
 
     except Exception as e:
@@ -1680,11 +1677,36 @@ def app2_3() -> None:
     # for loop ends
 
     unique_sp_list: list[str] = list(set(non_unique_sp_list))
+    total_files_before_exclusion = len(unique_sp_list)
 
-    data: dict[str, list[str]] = {'SP Name': unique_sp_list}
+    ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
+    # ignore = []
+
+    with open(ignore_file_path, "r") as f:
+        ignore = f.read().splitlines()
+
+    additional_ignore_list = ['*.mig*', '*sqlquery*', '*2022*', '*2023*']
+
+    ignore.extend(additional_ignore_list)
+    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
+
+
+    # Create a regular expression pattern to match ignore patterns
+    ignore_pattern = "|".join(ignore_patterns_list)
+    ignore_pattern = f"({ignore_pattern})"
+
+    # Exclusion based on pattern matching file
+    unique_sp_list_excl = [sp for sp in unique_sp_list if not re.match(ignore_pattern, sp.upper())]
+
+    total_files_after_exclusion = len(unique_sp_list_excl)
+    number_of_files_excluded = total_files_before_exclusion - total_files_after_exclusion
+
+
+
+    data: dict[str, list[str]] = {'SP Name': unique_sp_list_excl}
     for db in db_list:
         sps_in_current_db: list[str] = os.listdir(db)
-        presence: list[bool] = [sp in sps_in_current_db for sp in unique_sp_list]
+        presence: list[bool] = [sp in sps_in_current_db for sp in unique_sp_list_excl]
         data[os.path.basename(db)] = ['PRESENT' if p else 'ABSENT' for p in presence]
     # for loop ends
 
@@ -1700,8 +1722,7 @@ def app2_3() -> None:
 
     # Load the existing workbook and sheet
     wb: Workbook = load_workbook(excel_file_name)
-    ws: _WorkbookChild = wb.active
-    #TODO: type annotations
+    ws = wb.active
     # Apply cell coloring based on the cell values
     for row in ws.iter_rows(
         min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
@@ -1714,6 +1735,11 @@ def app2_3() -> None:
 
     # Save the modified workbook
     wb.save(excel_file_name)
+
+    print("\n\nSummary:\n")
+    print(f"Number of files before exclusion:\t{total_files_before_exclusion}")
+    print(f"Number of files after exclusion:\t{total_files_after_exclusion}")
+    print(f"Number of excluded files:\t{number_of_files_excluded}")
 
 
 
@@ -1740,6 +1766,79 @@ def app2():
             print("Invalid choice. Exiting...")
             sys.exit(1)
 
+
+# ############
+
+
+def extract_schema_from_sql(sql_file):
+    # Read the SQL file and extract schema information
+    schema = {}
+    with open(sql_file, 'r') as file:
+        sql_content = file.read()
+
+    # Use regular expressions to extract schema details
+    # Modify the regex patterns as needed to match your SQL file format
+    table_pattern = r'CREATE TABLE \[dbo\]\.\[([^\]]+)\]'
+    column_pattern = r'\[([^\]]+)\] ([^\s]+)'
+
+    tables = re.findall(table_pattern, sql_content)
+
+    for table in tables:
+        schema[table] = []
+        column_matches = re.findall(column_pattern, sql_content)
+        for match in column_matches:
+            column_name, column_type = match
+            schema[table].append((column_name, column_type))
+
+    return schema
+
+def compare_schemas(source_folder, target_folders):
+    # Create an Excel workbook
+    workbook = openpyxl.Workbook()
+    summary_sheet = workbook.active
+    summary_sheet.title = "Schema Comparison Summary"
+    summary_sheet.append(["File Name", "Database Name", "Table Name", "Status"])
+
+    # Compare schemas for each target folder
+    for target_folder in target_folders:
+        target_sql_file = os.path.join(target_folder, f"{target_folder}.sql")
+        if not os.path.exists(target_sql_file):
+            continue
+
+        target_schema = extract_schema_from_sql(target_sql_file)
+
+        # Iterate through SQL files in the source folder
+        for root, _, files in os.walk(source_folder):
+            for file in files:
+                if file.endswith(".sql"):
+                    source_sql_file = os.path.join(root, file)
+                    source_schema = extract_schema_from_sql(source_sql_file)
+                    db_name = os.path.basename(target_folder)
+                    file_name = os.path.basename(source_sql_file)
+
+                    missing_tables, different_tables = compare_schemas(
+                        source_schema,
+                        target_schema
+                        )
+
+                    # Add comparison results to the summary sheet
+                    for table in missing_tables:
+                        summary_sheet.append([file_name, db_name, table, "Missing"])
+
+                    for table in different_tables:
+                        summary_sheet.append([file_name, db_name, table, "Different"])
+
+    # Save the Excel report
+    report_file = "Schema_Comparison_Report.xlsx"
+    workbook.save(report_file)
+
+def app1_2():
+    source_folder = "RFCTEST"  # Change this to the folder containing RFCTEST SQL files
+    target_folders = ["CPUH", "CPUK", "CRESCENT", "DAIICT", "DCH", "HITS", "IPER", "IPR", "JECRC", "MAHER", "MIT", "PRMCEM", "PRMITR", "RCPIPER", "RCPIT"]
+
+    compare_schemas(source_folder, target_folders)
+
+    print("Schema comparison report saved")
 
 # ############
 
@@ -1792,7 +1891,7 @@ def main():
         elif choice == 7:
             pass
         elif choice == 8:
-            pass
+            app1_2()
         else:
             print(
                 RED + "Error: " + RESET + "Please select a valid choice from 1 to 6\n"
