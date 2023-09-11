@@ -19,6 +19,27 @@ YELLOW = "\033[93m"
 RESET = "\033[0m"
 
 
+def ignore(ign_filepath: str, orig_filelist) -> list[str]:
+    with open(ign_filepath, "r") as f:
+        ignore: list[str]= f.read().splitlines()
+
+    additional_ignore_list = [
+        '*.mig*', '*sqlquery*', '*2022*', '*2023*', '*backup*'
+    ]
+
+    ignore.extend(additional_ignore_list)
+    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
+
+
+    # Create a regular expression pattern to match ignore patterns
+    ignore_pattern = "|".join(ignore_patterns_list)
+    ignore_pattern = f"({ignore_pattern})"
+
+    filtered_filelist = [file for file in orig_filelist if not re.match(ignore_pattern, file.upper())]
+
+    return filtered_filelist
+
+
 def connect_to_server(server, database, username, password):
     try:
         connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
@@ -522,27 +543,6 @@ def difference(source_sql_path, test_sql_path):
 
     except Exception as e:
         print(f"Error while comparing SQL Files: {str(e)}")
-
-
-def ignore(ign_filepath: str, orig_filelist) -> list[str]:
-    with open(ign_filepath, "r") as f:
-        ignore: list[str]= f.read().splitlines()
-
-    additional_ignore_list = [
-        '*.mig*', '*sqlquery*', '*2022*', '*2023*', '*backup*'
-    ]
-
-    ignore.extend(additional_ignore_list)
-    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
-
-
-    # Create a regular expression pattern to match ignore patterns
-    ignore_pattern = "|".join(ignore_patterns_list)
-    ignore_pattern = f"({ignore_pattern})"
-
-    filtered_filelist = [file for file in orig_filelist if not re.match(ignore_pattern, file.upper())]
-
-    return filtered_filelist
 
 def app2_4() -> None:
     try:
@@ -1505,7 +1505,6 @@ def app2_3() -> None:
     total_files_before_exclusion = len(unique_sp_list)
 
     ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
-    # ignore = []
 
     with open(ignore_file_path, "r") as f:
         ignore = f.read().splitlines()
