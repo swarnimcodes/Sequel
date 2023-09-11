@@ -108,7 +108,6 @@ def generate_excel_report(workbook, source_schema, target_schema, target_db_name
     comparison_results = perform_schema_comparison(source_schema, target_schema)
     sheet = workbook.create_sheet(target_db_name)
 
-    # Write Headers
     sheet["A1"] = "Schema"
     sheet["B1"] = "Table Name"
     sheet["C1"] = "Column Name"
@@ -117,7 +116,6 @@ def generate_excel_report(workbook, source_schema, target_schema, target_db_name
     sheet["F1"] = "Numeric Precision"
     sheet["G1"] = "Numeric Scale"
 
-    # Populate the sheet
     row = 2
     for result in comparison_results:
         sheet[f"A{row}"] = result["schema"]
@@ -244,7 +242,7 @@ def app1() -> None:
         try:
             source_schema = fetch_schema(
                 source_server, source_database, source_username, source_password
-            )  # has information regarding source schema
+            )
         except Exception:
             raise ValueError(
                 "Couldn't fetch source schema. Perhaps the"
@@ -258,7 +256,6 @@ def app1() -> None:
                 + "you entered are incorrect?\n"
             )
 
-        # Create a single workbook outside the loop
         workbook = openpyxl.Workbook()
 
         try:
@@ -283,7 +280,6 @@ def app1() -> None:
             return
 
         for target_db_number in range(1, number_of_target_db + 1):
-            # Initialize the nested dictionary for the current target DB number
             nested_target_dbs[target_db_number] = {}
             nested_target_dbs[target_db_number]["server"] = input(
                 "\nEnter"
@@ -346,7 +342,8 @@ def app1() -> None:
 
                 except Exception as e:
                     print(
-                        f"\nError fetching schema for target database number {target_db_number}: {str(e)}"
+                        "\nError fetching schema for target database number"
+                        + f"{target_db_number}: {str(e)}"
                     )
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
