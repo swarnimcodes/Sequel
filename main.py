@@ -157,7 +157,7 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                     "table_name": table_name,
                     "column_name": f"Table {table_name} Not Found",
                     "data_type": "Missing Table",
-                    "max_length": str(col_info_source),
+                    "max_length": "",
                     "numeric_precision": "",
                     "numeric_scale": "",
                 }
