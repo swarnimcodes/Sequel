@@ -1,10 +1,8 @@
 import datetime
 import difflib
-import fnmatch
 import os
 import re
 import sys
-# from os.path import exists
 
 import nltk
 import openpyxl
@@ -33,7 +31,7 @@ def connect_to_server(server, database, username, password):
     return connection
 
 
-def fetch_schema_revamp(server, database, username, password) -> dict:
+def fetch_schema(server, database, username, password) -> dict:
     connection = connect_to_server(server, database, username, password)
     cursor = connection.cursor()
     schema_info = {}
@@ -48,7 +46,8 @@ def fetch_schema_revamp(server, database, username, password) -> dict:
     c.NUMERIC_PRECISION,
     c.NUMERIC_SCALE
     FROM INFORMATION_SCHEMA.TABLES AS t
-    JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+    JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND
+    t.TABLE_NAME = c.TABLE_NAME
     WHERE t.TABLE_TYPE = 'BASE TABLE'
     AND
     (
@@ -103,102 +102,6 @@ def fetch_schema_revamp(server, database, username, password) -> dict:
     connection.close()
     return schema_info
 
-
-# def fetch_schema(server, database, username, password):
-#     schema_info = {}
-
-#     try:
-#         # Establish connection:
-#         connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
-#         connection = pyodbc.connect(connection_string)
-#         cursor = connection.cursor()
-
-#         # Fetch Schema
-#         # schema_query = """
-#         # SELECT
-#         #     t.TABLE_SCHEMA,
-#         #     t.TABLE_NAME,
-#         #     c.COLUMN_NAME,
-#         #     c.DATA_TYPE,
-#         #     c.CHARACTER_MAXIMUM_LENGTH,
-#         #     c.NUMERIC_PRECISION,
-#         #     c.NUMERIC_SCALE
-#         # FROM INFORMATION_SCHEMA.TABLES AS t
-#         # JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
-#         # WHERE t.TABLE_TYPE = 'BASE TABLE'
-#         # ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
-#         # """
-
-#         schema_query = """
-#         SELECT
-#         t.TABLE_SCHEMA,
-#         t.TABLE_NAME,
-#         c.COLUMN_NAME,
-#         c.DATA_TYPE,
-#         c.CHARACTER_MAXIMUM_LENGTH,
-#         c.NUMERIC_PRECISION,
-#         c.NUMERIC_SCALE
-#         FROM INFORMATION_SCHEMA.TABLES AS t
-#         JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
-#         WHERE t.TABLE_TYPE = 'BASE TABLE'
-#         AND
-#         (
-#         t.TABLE_NAME NOT LIKE '%BKUP%'
-#         AND t.TABLE_NAME NOT LIKE '%BKP%'
-#         AND t.TABLE_NAME NOT LIKE '%20%'
-#         AND t.TABLE_NAME NOT LIKE '%SWAPNIL%'
-#         AND t.TABLE_NAME NOT LIKE '%SQLQUERY%'
-#         AND t.TABLE_NAME NOT LIKE '%FARHEEN%'
-#         AND t.TABLE_NAME NOT LIKE '%SHUBHAM%'
-#         AND t.TABLE_NAME NOT LIKE '%CHHAGAN%'
-#         AND t.TABLE_NAME NOT LIKE '%TCKT%'
-#         AND t.TABLE_NAME NOT LIKE '%MIGRATION%'
-#         AND t.TABLE_NAME NOT LIKE '%MIGR%'
-#         AND t.TABLE_NAME NOT LIKE '%TID%'
-#         AND t.TABLE_NAME NOT LIKE '%tblPivoPOAttainmet%'
-#         AND t.TABLE_NAME NOT LIKE '%BK%'
-#         AND t.TABLE_NAME NOT LIKE '%BACKUP%'
-#         AND t.TABLE_NAME NOT LIKE '%TKT%'
-#         AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
-#         AND t.TABLE_NAME NOT LIKE '%TICKET%'
-#         AND t.TABLE_NAME NOT LIKE '%MIG%'
-#         )
-#         ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
-#         """
-
-#         print("\nExecuting the schema query. Please wait...\n")
-#         cursor.execute(schema_query)
-#         print("Schema query execution" + GREEN + " completed" + RESET + ".\n")
-#         rows = cursor.fetchall()
-
-#         for row in rows:
-#             table_schema = row.TABLE_SCHEMA
-#             table_name = row.TABLE_NAME
-#             column_name = row.COLUMN_NAME
-#             data_type = row.DATA_TYPE
-#             max_length = row.CHARACTER_MAXIMUM_LENGTH
-#             numeric_precision = row.NUMERIC_PRECISION
-#             numeric_scale = row.NUMERIC_SCALE
-
-#             schema_info.setdefault(table_schema, {}).setdefault(table_name, []).append(
-#                 {
-#                     "column_name": column_name,
-#                     "data_type": data_type,
-#                     "max_length": max_length,
-#                     "numeric_precision": numeric_precision,
-#                     "numeric_scale": numeric_scale,
-#                 }
-#             )
-
-#         connection.close()
-
-#         return schema_info
-#     except pyodbc.Error as e:
-#         raise Exception(RED + "Error " + RESET + f"while fetching schema: {str(e)}")
-#     except Exception as ex:
-#         raise Exception(
-#             "An" + RED + " unexpected error " + RESET + f"occurred: {str(ex)}"
-#         )
 
 
 def generate_excel_report(workbook, source_schema, target_schema, target_db_name):
@@ -340,7 +243,7 @@ def app1() -> None:
         print("Fetching Source Information... \n")
 
         try:
-            source_schema = fetch_schema_revamp(
+            source_schema = fetch_schema(
                 source_server, source_database, source_username, source_password
             )  # has information regarding source schema
         except Exception as e:
@@ -432,7 +335,7 @@ def app1() -> None:
                 )
             else:
                 try:
-                    target_schema = fetch_schema_revamp(
+                    target_schema = fetch_schema(
                         target_server, target_database, target_username, target_password
                     )
                     generate_excel_report(
@@ -557,13 +460,15 @@ def strip_comments(sql_file_contents) -> str:
 
     return stripped_sql_file
 
+"""
+This function is supposed to ignore lines before the word "Create"
+This is useful but has a few caveats such as what if there is the word create
+in the comments before the actual statement that creates the procedure
+also this does not check the differences on the line itself
+Ideally should check after the second square bracket
+Example: CREATE      PROCEDURE [PR_ACD_SECTION_MASTER_SHOW_MULTI_MASTERS] abcd
+"""
 
-## This function is supposed to ignore lines before the word "Create"
-## This is useful but has a few caveats such as what if there is the word create
-## in the comments before the actual statement that creates the procedure
-## also this does not check the differences on the line itself
-## Ideally should check after the second square bracket
-## Example: CREATE      PROCEDURE [PR_ACD_SECTION_MASTER_SHOW_MULTI_MASTERS] abcd
 
 def strip_comments_after_create(sql_file_contents):
     try:
@@ -596,7 +501,7 @@ def strip_comments_after_create(sql_file_contents):
     return stripped_sql_file
 
 
-def difference_app2(source_sql_path, test_sql_path):
+def difference(source_sql_path, test_sql_path):
     try:
         try:
             with open(source_sql_path, "r", encoding="utf-8") as file:
@@ -615,39 +520,6 @@ def difference_app2(source_sql_path, test_sql_path):
         # Remove comments without normalizing whitespace
         stripped_sql_file_source = strip_comments_after_create(source_contents)
         stripped_sql_file_test = strip_comments_after_create(test_contents)
-
-        if stripped_sql_file_source == stripped_sql_file_test:
-            return True
-        else:
-            return False
-
-    except Exception as e:
-        print(f"Error while comparing SQL Files: {str(e)}")
-
-
-def difference(source_sql_path, test_sql_path):
-    try:
-        try:
-            with open(source_sql_path, "r", encoding="utf-8") as file:
-                source_contents = file.read().upper().strip()
-        except UnicodeError:
-            with open(source_sql_path, "r", encoding="utf-16") as file:
-                source_contents = file.read().upper()
-
-        try:
-            with open(test_sql_path, "r", encoding="utf-8") as file:
-                test_contents = file.read().upper().strip()
-        except UnicodeError:
-            with open(test_sql_path, "r", encoding="utf-16") as file:
-                test_contents = file.read().upper()
-
-        normalized_sql_file_source = normalize_sql(source_contents)
-        stripped_sql_file_source = strip_comments(normalized_sql_file_source)
-        # stripped_sql_file_source = normalize_sql(stripped_sql_file_source)
-
-        normalized_sql_file_test = normalize_sql(test_contents)
-        stripped_sql_file_test = strip_comments(normalized_sql_file_test)
-        # stripped_sql_file_test = normalize_sql(stripped_sql_file_test)
 
         if stripped_sql_file_source == stripped_sql_file_test:
             return True
@@ -787,7 +659,7 @@ def app2_4() -> None:
             for target_db_dir in target_db_dirs:
                 target_sql_path = os.path.join(target_db_dir, sql_file)
                 if os.path.exists(target_sql_path):
-                    if difference_app2(source_sql_path, target_sql_path):
+                    if difference(source_sql_path, target_sql_path):
                         sp_info[os.path.basename(target_db_dir)] = "PRESENT & EQUAL"
                         summary[target_db_dir]["Present & Equal Entries"] += 1
                     else:
@@ -1015,12 +887,10 @@ def app3():
 
                 if difference(
                     file1_path, file2_path
-                ):  # TODO: use the new difference function to avoid duplication
+                ):
                     content_comparison = "Equal"
-                    # print(f"Files {sql_file} are equal")
                 else:
                     content_comparison = "Different"
-                    # print(f"Files {sql_file} are unequal")
                     diff_html = generate_html_diff(
                         file1_contents, file2_contents, folder1_path, folder2_path
                     )
@@ -1064,11 +934,9 @@ def app3():
                     ]
                 )
 
-    # Create a new Excel workbook and add a worksheet
     wb = openpyxl.Workbook()
     ws = wb.active
 
-    # Define column headers
     headers = [
         "SP Name",
         f"Present in {os.path.basename(folder1_path)}",
@@ -1077,14 +945,11 @@ def app3():
         "Diff File",
     ]
 
-    # Write column headers to the worksheet
     ws.append(headers)
 
-    # Write comparison results to the worksheet
     for row in comparison_results:
         ws.append(row)
 
-    # Apply cell coloring based on conditions
     for row_idx, row in enumerate(
         ws.iter_rows(min_row=2, max_row=len(comparison_results) + 1), start=2
     ):
@@ -1099,7 +964,6 @@ def app3():
     num_files_different = sum(row[3] == "Different" for row in comparison_results)
     total_files_scanned = len(comparison_results)
 
-    # Save the workbook
     wb.save(excel_output_file)
     print(YELLOW + "\n\nSummary: " + RESET)
     print(
@@ -1124,7 +988,7 @@ def app3():
     # Open the folder insted of the excel file
     os.system(f'explorer /select, "{os.path.abspath(excel_output_file)}"')
 
-    # END OF APP 3 #########################################################################
+    # END OF APP 3 ###################################################################
 
 
 def get_unique_list(non_unique_list):
