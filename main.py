@@ -13,7 +13,6 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill
 from tqdm import tqdm
 
-# ANSI escape codes for text colors
 RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -246,9 +245,9 @@ def app1() -> None:
             source_schema = fetch_schema(
                 source_server, source_database, source_username, source_password
             )  # has information regarding source schema
-        except Exception as e:
+        except Exception:
             raise ValueError(
-                f"Couldn't fetch source schema. Perhaps the"
+                "Couldn't fetch source schema. Perhaps the"
                 + RED
                 + " login details "
                 + RESET
@@ -267,7 +266,7 @@ def app1() -> None:
                 "How many databases do you want to compare against source? \t"
             )
             number_of_target_db = int(number_of_target_db)
-        except Exception as e:
+        except Exception:
             print(
                 RED
                 + "Error: "
@@ -287,28 +286,28 @@ def app1() -> None:
             # Initialize the nested dictionary for the current target DB number
             nested_target_dbs[target_db_number] = {}
             nested_target_dbs[target_db_number]["server"] = input(
-                f"\nEnter"
+                "\nEnter"
                 + GREEN
                 + " Server Address "
                 + RESET
                 + f"for Target DB number {target_db_number}: "
             )
             nested_target_dbs[target_db_number]["database"] = input(
-                f"Enter"
+                "Enter"
                 + GREEN
                 + " Database Name "
                 + RESET
                 + f"for Target DB number {target_db_number}: "
             )
             nested_target_dbs[target_db_number]["username"] = input(
-                f"Enter"
+                "Enter"
                 + GREEN
                 + " User Name "
                 + RESET
                 + f"for Target DB number {target_db_number}: "
             )
             nested_target_dbs[target_db_number]["password"] = input(
-                f"Enter"
+                "Enter"
                 + GREEN
                 + " Password "
                 + RESET
@@ -356,7 +355,7 @@ def app1() -> None:
         workbook.remove(workbook.active)
         workbook.save(excel_file_name)
         print(
-            f"\nExcel file"
+            "\nExcel file"
             + GREEN
             + " successfully "
             + RESET
@@ -872,8 +871,8 @@ def app3():
                 except UnicodeError:
                     with open(file1_path, "r", encoding="utf-16") as file:
                         file1_contents = file.read().upper()
-                normalized_sql_1 = normalize_sql(file1_contents)
-                file1_nocomments = strip_sql_comments(normalized_sql_1)
+                # normalized_sql_1 = normalize_sql(file1_contents)
+                # file1_nocomments = strip_sql_comments(normalized_sql_1)
 
                 try:
                     with open(file2_path, "r", encoding="utf-8") as file:
@@ -882,8 +881,8 @@ def app3():
                     with open(file2_path, "r", encoding="utf-16") as file:
                         file2_contents = file.read().upper()
 
-                normalized_sql_2 = normalize_sql(file2_contents)
-                file2_nocomments = strip_sql_comments(normalized_sql_2)
+                # normalized_sql_2 = normalize_sql(file2_contents)
+                # file2_nocomments = strip_sql_comments(normalized_sql_2)
 
                 if difference(
                     file1_path, file2_path
@@ -1370,7 +1369,7 @@ def app2_1() -> None:
                 else:
                     sp_info[target_db["database"]] = "PRESENT & UNEQUAL"
 
-            except Exception as e:
+            except Exception:
                 sp_info[target_db["database"]] = "ABSENT"
 
         sp_data.append(sp_info)
@@ -1429,7 +1428,7 @@ def get_database_details():
 
 
 def app2_2() -> None:
-    print(f"\n\nOnline SP Presence Analyzer for Multiple Databases\n\n")
+    print("\n\nOnline SP Presence Analyzer for Multiple Databases\n\n")
     print("This program will run as long as you don't enter 'done' when asked for")
 
     database_details = get_database_details()
@@ -1520,7 +1519,7 @@ def app2_2() -> None:
 
 # ###################
 def app2_3() -> None:
-    print(f"\n\nOffline SP Presence Analyzer for Multiple Databases\n\n")
+    print("\n\nOffline SP Presence Analyzer for Multiple Databases\n\n")
     print("This program will run as long as you don't enter 'done' when asked for")
 
     truth: bool = True
