@@ -681,7 +681,6 @@ def app2_4() -> None:
         wb = load_workbook(output_excel_path)
         ws = wb.active
 
-        # Apply cell coloring based on the cell values
         for row in ws.iter_rows(
             min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
         ):
@@ -842,7 +841,6 @@ def app3():
         )
         sys.exit(1)
 
-    # Define cell fill colors
     different_color = PatternFill(
         start_color="8ab4ff", end_color="8ab4ff", fill_type="solid"
     )
@@ -851,9 +849,7 @@ def app3():
     )
 
     nltk.download("words", quiet=True)
-    nltk.download(
-        "punkt", quiet=True
-    )  # No output should be thrown on terminal when downloading
+    nltk.download("punkt", quiet=True)
     nltk.download("words", quiet=True)
     for sql_file in os.listdir(folder1_path):  # Path of source will be passed here
         if sql_file.endswith(".sql"):
