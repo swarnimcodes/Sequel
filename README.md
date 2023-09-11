@@ -12,5 +12,5 @@ Has 4 programs bundled into a cli app:
 1. Database Schema Analyzer: Compare database schemas from multiple sources and generate Excel reports
 
 2. Stored Procedure Analyzer: Compare Stored Procedures from multiple databases on your system and generate Excel report
-  - abcd
+    2.1 abcd
 3. Stored Procedure Comparator + HTML Diff Generator: Compare Stored Procedures between two databases on your system, generate Excel reports, and store differential files in HTML format for visualizing differences
