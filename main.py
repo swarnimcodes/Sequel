@@ -13,6 +13,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill
 from tqdm import tqdm
 
+# Colors
 RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
