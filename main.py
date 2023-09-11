@@ -480,14 +480,12 @@ def strip_comments_after_create(sql_file_contents):
                 continue
 
             if create_found:
-                # Remove comments from the line
                 line = re.sub(r"--.*", "", line)
                 line = re.sub(r"/\*.*?\*/", "", line, flags=re.DOTALL)
-                line = line.strip()  # Remove leading/trailing whitespace
+                line = line.strip()
                 if line:
                     stripped_lines.append(line)
 
-        # Join the stripped lines to form the SQL content
         stripped_sql_file = "\n".join(stripped_lines)
 
     except Exception as e:
@@ -497,6 +495,7 @@ def strip_comments_after_create(sql_file_contents):
     return stripped_sql_file
 
 
+# The content is not tokenized while checking difference
 def difference(source_sql_path, test_sql_path):
     try:
         try:
@@ -513,7 +512,6 @@ def difference(source_sql_path, test_sql_path):
             with open(test_sql_path, "r", encoding="utf-16") as file:
                 test_contents = file.read().upper()
 
-        # Remove comments without normalizing whitespace
         stripped_sql_file_source = strip_comments_after_create(source_contents)
         stripped_sql_file_test = strip_comments_after_create(test_contents)
 
@@ -525,6 +523,26 @@ def difference(source_sql_path, test_sql_path):
     except Exception as e:
         print(f"Error while comparing SQL Files: {str(e)}")
 
+
+def ignore(ign_filepath: str, orig_filelist) -> list[str]:
+    with open(ign_filepath, "r") as f:
+        ignore: list[str]= f.read().splitlines()
+
+    additional_ignore_list = [
+        '*.mig*', '*sqlquery*', '*2022*', '*2023*', '*backup*'
+    ]
+
+    ignore.extend(additional_ignore_list)
+    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
+
+
+    # Create a regular expression pattern to match ignore patterns
+    ignore_pattern = "|".join(ignore_patterns_list)
+    ignore_pattern = f"({ignore_pattern})"
+
+    filtered_filelist = [file for file in orig_filelist if not re.match(ignore_pattern, file.upper())]
+
+    return filtered_filelist
 
 def app2_4() -> None:
     try:
@@ -604,7 +622,8 @@ def app2_4() -> None:
                         RED
                         + "Error: "
                         + RESET
-                        + f"The directory '{target_db_dir}' does not exist or is invalid. Please enter a valid directory location.\n"
+                        + f"The directory '{target_db_dir}' does not exist" + 
+                            "or is invalid. Please enter a valid directory location.\n"
                     )
                 else:
                     target_db_dirs.append(target_db_dir)
@@ -614,28 +633,13 @@ def app2_4() -> None:
 
         # Get the list of sql file in source database
         source_sql_file_list = os.listdir(source_db_dir)
-        total_files_before_exclusion = len(source_sql_file_list)
+        total_files = len(source_sql_file_list)
 
-        ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
-
-        with open(ignore_file_path, "r") as f:
-            ignore = f.read().splitlines()
-
-        additional_ignore_list = ['*.mig*', '*sqlquery*', '*2022*', '*2023*', '*backup*']
-
-        ignore.extend(additional_ignore_list)
-        ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
-
-
-        # Create a regular expression pattern to match ignore patterns
-        ignore_pattern = "|".join(ignore_patterns_list)
-        ignore_pattern = f"({ignore_pattern})"
-
-        # Exclusion based on pattern matching file
-        source_sql_file_list_excl = [sp for sp in source_sql_file_list if not re.match(ignore_pattern, sp.upper())]
-
-        total_files_after_exclusion = len(source_sql_file_list_excl)
-        number_of_files_excluded = total_files_before_exclusion - total_files_after_exclusion
+        ignore_file_path = input("Drag and drop the ignore file:\t")
+        filtered_filelist: list[str] = ignore(ignore_file_path, source_sql_file_list)
+        
+        files_aft_excl = len(filtered_filelist)
+        excl_files = total_files - files_aft_excl
 
 
         summary = {}
@@ -647,7 +651,7 @@ def app2_4() -> None:
                 "Present & Equal Entries": 0,
             }
 
-        for sql_file in tqdm(source_sql_file_list_excl):
+        for sql_file in tqdm(filtered_filelist):
             sp_name = sql_file[:-4]  # Remove the .sql extension
             sp_info = {"SQL File": sp_name}
             source_sql_path = os.path.join(source_db_dir, sql_file)
@@ -690,10 +694,8 @@ def app2_4() -> None:
                         start_color="E6B8B7", end_color="E6B8B7", fill_type="solid"
                     )
 
-        # Save the modified workbook
         wb.save(output_excel_path)
 
-        # Print the summary for each target database
         print(YELLOW + "\n\nSummary:\n\n" + RESET)
         for target_db_dir, summary_data in summary.items():
             print(
@@ -724,9 +726,9 @@ def app2_4() -> None:
         os.system(f'explorer /select, "{os.path.abspath(output_excel_path)}"')
 
         print("\n\nSummary or Exclusion:\n")
-        print(f"Total Files: {total_files_before_exclusion}")
-        print(f"Included Files: {total_files_after_exclusion}")
-        print(f"Excluded Files: {number_of_files_excluded}")
+        print(f"Total Files: {total_files}")
+        print(f"Included Files: {files_aft_excl}")
+        print(f"Excluded Files: {excl_files}")
 
         input("Press Enter to exit...")
 
@@ -1309,39 +1311,19 @@ def app2_1() -> None:
             print("Error: " + str(e))
     # While loop ends
     source_sps = fetch_stored_procedures(server, database, username, password)
-    total_files_before_exclusion = len(source_sps)
+    total_files = len(source_sps)
 
-    # Get the list of sql file in source database
+    ignore_file_path = input("Drag and drop the ignore file:\t")
+    filt_source_sps = ignore(ignore_file_path, source_sps)
 
-    ignore = []
-    ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
-    with open(ignore_file_path, "r") as f:
-        ignore = f.read().splitlines()
+    num_files_aft_excl = len(filt_source_sps)
 
-    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
-
-    # Create a regular expression pattern to match ignore patterns
-    ignore_pattern = "|".join(ignore_patterns_list)
-    ignore_pattern = f"({ignore_pattern})"
-
-    # Exclusion based on pattern matching file
-
-    for file in source_sps:
-        if re.match(ignore_pattern, file):
-            source_sps.remove(file)
-
-
-
-    total_files_after_exclusion = len(source_sps)
-
-    number_of_files_excluded = (
-        total_files_before_exclusion - total_files_after_exclusion
-    )
+    num_excl_files = (total_files - num_files_aft_excl)
 
     sp_data = []
 
     # Loop through source SPs
-    for sp in tqdm(source_sps):
+    for sp in tqdm(filt_source_sps):
         sp_info = {"SP Name": sp}
 
         # Loop through target DBs
@@ -1398,9 +1380,9 @@ def app2_1() -> None:
     print(
         f"\n\nExcel file successfully created: {os.path.abspath(output_excel_file)}\n\n"
     )
-    print(f"Total Files: {total_files_before_exclusion}")
-    print(f"Files Excluded: {number_of_files_excluded}")
-    print(f"Files Considered: {total_files_after_exclusion}")
+    print(f"Total Files: {total_files}")
+    print(f"Files Excluded: {num_excl_files}")
+    print(f"Files Considered: {num_files_aft_excl}")
 
     os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
 # ################
