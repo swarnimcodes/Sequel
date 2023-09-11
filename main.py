@@ -1357,11 +1357,9 @@ def app2_1() -> None:
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
     output_excel_file = f"SP_Comparison_Report_Online_{timestamp}.xlsx"
     df.to_excel(output_excel_file, index=False)
-    # Load the existing workbook and sheet
     wb = load_workbook(output_excel_file)
     ws = wb.active
 
-    # Apply cell coloring based on the cell values
     for row in ws.iter_rows(
         min_row=2, max_row=ws.max_row, min_col=2, max_col=ws.max_column
     ):
@@ -1411,9 +1409,8 @@ def app2_2() -> None:
     print("This program will run as long as you don't enter 'done' when asked for")
 
     database_details = get_database_details()
-    total_files_before_exclusion = 0
+    total_files = 0
 
-    # Create an empty list to store all stored procedure names
     all_sp_names = []
 
     for database_detail in database_details:
@@ -1422,37 +1419,23 @@ def app2_2() -> None:
         username = database_detail['username']
         password = database_detail['password']
 
-        # Fetch stored procedure names for the current database
         sp_names = fetch_stored_procedures(server, database, username, password)
 
-        # Extend the all_sp_names list with the names from the current database
         all_sp_names.extend(sp_names)
 
     # Remove duplicates by converting the list to a set and back to a list
-    superset_sp_names = list(set(all_sp_names))
-    total_files_before_exclusion = len(superset_sp_names)
+    superset_sp_names = list(set(all_sp_names))  # unique but not filtered
+    total_files = len(superset_sp_names)
 
     ignore_file_path = input("Enter complete path of ignore file or drag and drop the ignore file:\t")
-    ignore = []
+    filt_sp_names = ignore(ignore_file_path, superset_sp_names)
 
-    with open(ignore_file_path, "r") as f:
-        ignore = f.read().splitlines()
-
-    ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in ignore]
-
-    # Create a regular expression pattern to match ignore patterns
-    ignore_pattern = "|".join(ignore_patterns_list)
-    ignore_pattern = f"({ignore_pattern})"
-
-    # Exclusion based on pattern matching file
-    superset_sp_names = [sp for sp in superset_sp_names if not re.match(ignore_pattern, sp)]
-
-    total_files_after_exclusion = len(superset_sp_names)
-    number_of_files_excluded = total_files_before_exclusion - total_files_after_exclusion
+    num_files_aft_excl = len(filt_sp_names)
+    num_excl_files = total_files - num_files_aft_excl
 
     sp_data = []
 
-    for sp in tqdm(superset_sp_names):
+    for sp in tqdm(filt_sp_names):
         sp_info = {"SP Name": sp}
         for database_detail in database_details:
             server = database_detail['server']
@@ -1489,9 +1472,9 @@ def app2_2() -> None:
     print(
         f"\n\nExcel file successfully created: {os.path.abspath(output_excel_file)}\n\n"
     )
-    print(f"Total Files: {total_files_before_exclusion}")
-    print(f"Files Excluded: {number_of_files_excluded}")
-    print(f"Files Considered: {total_files_after_exclusion}")
+    print(f"Total Files: {total_files}")
+    print(f"Files Excluded: {num_excl_files}")
+    print(f"Files Considered: {num_files_aft_excl}")
 
     os.system(f'explorer /select,"{os.path.abspath(output_excel_file)}"')
 
