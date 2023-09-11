@@ -1203,21 +1203,11 @@ def app6():
         else:
             break
         pass
-
-    # print(patterns)
-
     ignore_patterns_list = [r".*_" + item.upper() + ".*" for item in patterns]
-
-    # print(ignore_patterns_list)
-
-    # Create a regular expression pattern to match ignore patterns
     ignore_pattern = "|".join(ignore_patterns_list)
     ignore_pattern = f"({ignore_pattern})"
-
     excluded_files = []
-
     included_files = []
-
     for file in file_list:
         if re.match(ignore_pattern, file):
             excluded_files.append(file)
@@ -1229,7 +1219,6 @@ def app6():
     wb = openpyxl.Workbook()
     ws = wb.active
 
-    # Headers
     ws["A1"] = "Included Files"
     ws["B1"] = "Excluded Files (pattern matched)"
     column_letter1 = "A"
@@ -1242,7 +1231,6 @@ def app6():
         cell = ws[column_letter2 + str(ws.max_row + 1)]
         cell.value = file
 
-    # Data
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
     excel_file_name = f"Inluded_Excluded_Files_{timestamp}.xlsx"
 
