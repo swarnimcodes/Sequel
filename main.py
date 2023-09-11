@@ -433,10 +433,11 @@ def app1() -> None:
 # END OF APP 1 #########################################################################
 
 
-def fetch_stored_procedures(server, database, username, password) -> list:
+def fetch_stored_procedures(server, database, username, password) -> list[str]:
     stored_procedures = []
 
     try:
+        # uses the connect_to_server() function
         connection = connect_to_server(server, database, username, password)
         cursor = connection.cursor()
 
@@ -462,20 +463,20 @@ def fetch_stored_procedures(server, database, username, password) -> list:
     return stored_procedures
 
 
-def strip_comments(sql_file_contents) -> str:
-    try:
-        stripped_sql_file = re.sub(r"--.*", "", sql_file_contents)
-        stripped_sql_file = re.sub(r"/\*.*?\*/", "", stripped_sql_file, flags=re.DOTALL)
-        stripped_sql_file = "\n".join(
-            " ".join(part.strip() for part in line.split() if part.strip())
-            for line in stripped_sql_file.splitlines()
-            if line.strip()
-        )
-    except Exception as e:
-        print(f"Error while stripping comments: {str(e)}")
-        stripped_sql_file = ""
-
-    return stripped_sql_file
+# Duplicate strip sql comment func
+# def strip_sql_comments(sql_file_contents) -> str:
+#     try:
+#         stripped_sql_file = re.sub(r"--.*", "", sql_file_contents)
+#         stripped_sql_file = re.sub(r"/\*.*?\*/", "", stripped_sql_file, flags=re.DOTALL)
+#         stripped_sql_file = "\n".join(
+#             " ".join(part.strip() for part in line.split() if part.strip())
+#             for line in stripped_sql_file.splitlines()
+#             if line.strip()
+#         )
+#     except Exception as e:
+#         print(f"Error while stripping comments: {str(e)}")
+#         stripped_sql_file = ""
+#     return stripped_sql_file
 
 """
 This function is supposed to ignore lines before the word "Create"
@@ -676,7 +677,7 @@ def app2_4() -> None:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
         output_excel_path = f"SP_Comparison_Report_{timestamp}.xlsx"
         df.to_excel(output_excel_path, index=False)
-        # Load the existing workbook and sheet
+
         wb = load_workbook(output_excel_path)
         ws = wb.active
 
@@ -708,11 +709,14 @@ def app2_4() -> None:
             )
             print(f"Absent Entries: {summary_data['Absent Entries']}")
             print(
-                f"Present & Unequal Entries: {summary_data['Present & Unequal Entries']}"
+                "Present & Unequal Entries:"
+                + f"{summary_data['Present & Unequal Entries']}"
             )
-            print(f"Present & Equal Entries: {summary_data['Present & Equal Entries']}")
+            print("Present & Equal Entries:"
+                    + f" {summary_data['Present & Equal Entries']}")
             print(
-                f"Total Entries Scanned Against Source: {summary_data['Absent Entries']+summary_data['Present & Unequal Entries']+summary_data['Present & Equal Entries']}"
+                "Total Entries Scanned Against Source:"
+                + f" {summary_data['Absent Entries']+summary_data['Present & Unequal Entries']+summary_data['Present & Equal Entries']}"
             )
             print("\n")
 
@@ -1328,8 +1332,8 @@ def app2_1() -> None:
                     target_db["password"],
                 )
 
-                stripped_source_sp = strip_comments(source_sp_content).upper()
-                stripped_target_sp = strip_comments(target_sp_content).upper()
+                stripped_source_sp = strip_sql_comments(source_sp_content).upper()
+                stripped_target_sp = strip_sql_comments(target_sp_content).upper()
 
                 if stripped_source_sp == stripped_target_sp:
                     sp_info[target_db["database"]] = "PRESENT & EQUAL"
