@@ -129,7 +129,13 @@ def fetch_schema(server, database, username, password) -> dict:
 
 
 
-def generate_excel_report(workbook, source_schema, target_schema, target_db_name):
+def generate_excel_report(
+    workbook,
+    source_schema,
+    target_schema,
+    target_db_name
+    ):
+    
     comparison_results = []
     comparison_results = perform_schema_comparison(source_schema, target_schema)
     sheet = workbook.create_sheet(target_db_name)
@@ -138,29 +144,54 @@ def generate_excel_report(workbook, source_schema, target_schema, target_db_name
     sheet["B1"] = "Table Name"
     sheet["C1"] = "Column Name"
     sheet["D1"] = "Type of Error"
-    sheet["E1"] = "Max Length"
-    sheet["F1"] = "Numeric Precision"
-    sheet["G1"] = "Numeric Scale"
+    sheet["E1"] = "Source Specification"
+    sheet["F1"] = "Target Specification"
+    
+    sheet["G1"] = "Source Column Name"
+    sheet["H1"] = "Source Data Type"
+    sheet["I1"] = "Source Max Length"
+    sheet["J1"] = "Source Numeric Precision"
+    sheet["K1"] = "Source Numeric Scale"
+    
+    sheet["L1"] = "Target Column Name"
+    sheet["M1"] = "Target Data Type"
+    sheet["N1"] = "Target Max Length"
+    sheet["O1"] = "Target Numeric Precision"
+    sheet["P1"] = "Target Numeric Scale"
+
 
     row = 2
     for result in comparison_results:
         sheet[f"A{row}"] = result["schema"]
         sheet[f"B{row}"] = result["table_name"]
         sheet[f"C{row}"] = result["column_name"]
-        sheet[f"D{row}"] = result["data_type"]
-        sheet[f"E{row}"] = result["max_length"]
-        sheet[f"F{row}"] = result["numeric_precision"]
-        sheet[f"G{row}"] = result["numeric_scale"]
+        sheet[f"D{row}"] = result["type_of_error"]
+        # TODO: change names
+        sheet[f"E{row}"] = result["source_specification"]
+        sheet[f"F{row}"] = result["target_specification"]
+        
+        # Changes
+        sheet[f"G{row}"] = result['source_column_name']
+        sheet[f"H{row}"] = result['source_data_type']
+        sheet[f"I{row}"] = result['source_max_length']
+        sheet[f"J{row}"] = result['source_numeric_precision']
+        sheet[f"K{row}"] = result['source_numeric_scale']
 
-        if result["data_type"] == "Missing Column":
+        sheet[f"L{row}"] = result['target_column_name']
+        sheet[f"M{row}"] = result['target_data_type']
+        sheet[f"N{row}"] = result['target_max_length']
+        sheet[f"O{row}"] = result['target_numeric_precision']
+        sheet[f"P{row}"] = result['target_numeric_scale']
+
+        if result["type_of_error"] == "Missing Column":
             sheet[f"D{row}"].fill = PatternFill(
                 start_color="F9B9B7", end_color="F9B9B7", fill_type="solid"
             )
-        elif result["data_type"] == "Different Specification":
+        elif result["type_of_error"] == "Different Specification":
             sheet[f"D{row}"].fill = PatternFill(
                 start_color="D1D5DE", end_color="D1D5DE", fill_type="solid"
             )
-        elif result["data_type"] == "Missing Table":
+        elif result["type_of_error"] == "Missing Table":
             sheet[f"D{row}"].fill = PatternFill(
                 start_color="c4d79b", end_color="c4d79b", fill_type="solid"
             )
@@ -180,45 +211,77 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                     "schema": schema,
                     "table_name": table_name,
                     "column_name": f"Table {table_name} Not Found",
-                    "data_type": "Missing Table",
-                    "max_length": "",
-                    "numeric_precision": "",
-                    "numeric_scale": "",
+                    "type_of_error": "Missing Table",
+                    "source_specification": "",
+                    "target_specification": "",
+                    # Changes
+                    "source_column_name": col_info_source['column_name'],
+                    "source_data_type": col_info_source['data_type'],
+                    "source_max_length": col_info_source['max_length'],
+                    "source_numeric_precision": col_info_source['numeric_precision'],
+                    "source_numeric_scale": col_info_source['numeric_scale'],
+                    # Target will be empty
+                    "target_column_name": "",
+                    "target_data_type": "",
+                    "target_max_length": "",
+                    "target_numeric_precision": "",
+                    "target_numeric_scale": "",
                 }
                 comparison_results.append(comparison_result)
             else:
                 for col_info_source in source_columns:
                     col_name_source = col_info_source["column_name"]
                     col_info_target = next(
-                        (
-                            col
-                            for col in target_columns
-                            if col["column_name"] == col_name_source
-                        ),
+                        (col for col in target_columns if col["column_name"] == col_name_source),
                         None,
                     )
 
                     if col_info_target is None:
+                        # TODO:
+                        # Missing Column
                         comparison_result = {
                             "schema": schema,
                             "table_name": table_name,
                             "column_name": col_name_source,
-                            "data_type": "Missing Column",
-                            "max_length": str(col_info_source),
-                            "numeric_precision": "",
-                            "numeric_scale": "",
+                            "type_of_error": "Missing Column",
+                            "source_specification": str(col_info_source),
+                            "target_specification": "",
+                            # CHANGES
+                            "source_column_name": col_info_source['column_name'],
+                            "source_data_type": col_info_source['data_type'],
+                            "source_max_length": col_info_source['max_length'],
+                            "source_numeric_precision": col_info_source['numeric_precision'],
+                            "source_numeric_scale": col_info_source['numeric_scale'],
+                            # Target will be empty ideally
+                            "target_column_name": "",
+                            "target_data_type": "",
+                            "target_max_length": "",
+                            "target_numeric_precision": "",
+                            "target_numeric_scale": "",
                         }
                         comparison_results.append(comparison_result)
 
+                    # Different Specification
                     elif col_info_source != col_info_target:
                         comparison_result = {
                             "schema": schema,
                             "table_name": table_name,
                             "column_name": col_name_source,
-                            "data_type": "Different Specification",
-                            "max_length": str(col_info_source),
-                            "numeric_precision": str(col_info_target),
-                            "numeric_scale": "",
+                            "type_of_error": "Different Specification",
+                            "source_specification": str(col_info_source),
+                            "target_specification": str(col_info_target),
+                            # Changes
+                            "source_column_name": col_info_source['column_name'],
+                            "source_data_type": col_info_source['data_type'],
+                            "source_max_length": col_info_source['max_length'],
+                            "source_numeric_precision": col_info_source['numeric_precision'],
+                            "source_numeric_scale": col_info_source['numeric_scale'],
+                            # Target
+                            "target_column_name": col_info_target['column_name'],
+                            "target_data_type": col_info_target['data_type'],
+                            "target_max_length": col_info_target['max_length'],
+                            "target_numeric_precision": col_info_target['numeric_precision'],
+                            "target_numeric_scale": col_info_target['numeric_scale']
                         }
                         comparison_results.append(comparison_result)
 
@@ -266,9 +329,18 @@ def app1() -> None:
         print("Fetching Source Information... \n")
 
         try:
-            source_schema = fetch_schema(
+                # "column_name": column_name,
+                # "data_type": data_type,
+                # "max_length": max_length,
+                # "numeric_precision": numeric_precision,
+                # "numeric_scale": numeric_scale,
+            source_schema,= fetch_schema(
                 source_server, source_database, source_username, source_password
             )
+            
+            print(f"Source Schema:\n{source_schema}")
+            
+            
         except Exception:
             raise ValueError(
                 "Couldn't fetch source schema. Perhaps the"
@@ -363,7 +435,7 @@ def app1() -> None:
                         workbook,
                         source_schema,
                         target_schema,
-                        nested_target_dbs[target_db_number]["database"],
+                        nested_target_dbs[target_db_number]["database"]
                     )
 
                 except Exception as e:
@@ -453,8 +525,8 @@ def fetch_stored_procedures(server, database, username, password) -> list[str]:
         """
 
         cursor.execute(query)
-        # rows = cursor.fetchall()  # to get all stored procedures
-        rows = cursor.fetchmany(1000)
+        rows = cursor.fetchall()  # to get all stored procedures
+        # rows = cursor.fetchmany(1000)
 
         for row in rows:
             stored_procedures.append(row[0])
@@ -853,10 +925,10 @@ def app3():
         start_color="ffd6ca", end_color="ffd6ca", fill_type="solid"
     )
 
-    nltk.download("words", quiet=True)
-    nltk.download("punkt", quiet=True)
-    nltk.download("words", quiet=True)
-    for sql_file in os.listdir(folder1_path):  # Path of source will be passed here
+    # nltk.download("words", quiet=True)
+    # nltk.download("punkt", quiet=True)
+    # nltk.download("words", quiet=True)
+    for sql_file in tqdm(os.listdir(folder1_path)):  # Path of source will be passed here
         if sql_file.endswith(".sql"):
             file1_path = os.path.join(folder1_path, sql_file)
             file2_path = os.path.join(folder2_path, sql_file)
