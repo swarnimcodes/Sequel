@@ -325,17 +325,11 @@ def app1() -> None:
         print("Fetching Source Information... \n")
 
         try:
-                # "column_name": column_name,
-                # "data_type": data_type,
-                # "max_length": max_length,
-                # "numeric_precision": numeric_precision,
-                # "numeric_scale": numeric_scale,
             source_schema,= fetch_schema(
                 source_server, source_database, source_username, source_password
             )
             
             print(f"Source Schema:\n{source_schema}")
-            
             
         except Exception:
             raise ValueError(
@@ -424,9 +418,7 @@ def app1() -> None:
                 )
             else:
                 try:
-                    target_schema = fetch_schema(
-                        target_server, target_database, target_username, target_password
-                    )
+                    target_schema = fetch_schema(target_server, target_database, target_username, target_password)
                     generate_excel_report(
                         workbook,
                         source_schema,
@@ -436,7 +428,7 @@ def app1() -> None:
 
                 except Exception as e:
                     print(
-                        "\nError fetching schema for target database number"
+                        "\nError fetching schema for target database number: "
                         + f"{target_db_number}: {str(e)}"
                     )
 
