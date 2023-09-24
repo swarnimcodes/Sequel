@@ -211,11 +211,11 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                     "source_specification": "",
                     "target_specification": "",
                     # Changes
-                    "source_column_name": col_info_source['column_name'],
-                    "source_data_type": col_info_source['data_type'],
-                    "source_max_length": col_info_source['max_length'],
-                    "source_numeric_precision": col_info_source['numeric_precision'],
-                    "source_numeric_scale": col_info_source['numeric_scale'],
+                    "source_column_name": "",
+                    "source_data_type": "",
+                    "source_max_length": "",
+                    "source_numeric_precision": "",
+                    "source_numeric_scale": "",
                     # Target will be empty
                     "target_column_name": "",
                     "target_data_type": "",
@@ -243,11 +243,11 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                             "source_specification": str(col_info_source),
                             "target_specification": "",
                             # CHANGES
-                            "source_column_name": col_info_source['column_name'],
-                            "source_data_type": col_info_source['data_type'],
-                            "source_max_length": col_info_source['max_length'],
-                            "source_numeric_precision": col_info_source['numeric_precision'],
-                            "source_numeric_scale": col_info_source['numeric_scale'],
+                            "source_column_name": "",
+                            "source_data_type": "",
+                            "source_max_length": "",
+                            "source_numeric_precision": "",
+                            "source_numeric_scale": "",
                             # Target will be empty ideally
                             "target_column_name": "",
                             "target_data_type": "",
@@ -267,17 +267,17 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                             "source_specification": str(col_info_source),
                             "target_specification": str(col_info_target),
                             # Changes
-                            "source_column_name": col_info_source['column_name'],
-                            "source_data_type": col_info_source['data_type'],
-                            "source_max_length": col_info_source['max_length'],
-                            "source_numeric_precision": col_info_source['numeric_precision'],
-                            "source_numeric_scale": col_info_source['numeric_scale'],
+                            "source_column_name": str(col_info_source['column_name']),
+                            "source_data_type": str(col_info_source['data_type']),
+                            "source_max_length": str(col_info_source['max_length']),
+                            "source_numeric_precision": str(col_info_source['numeric_precision']),
+                            "source_numeric_scale": str(col_info_source['numeric_scale']),
                             # Target
-                            "target_column_name": col_info_target['column_name'],
-                            "target_data_type": col_info_target['data_type'],
-                            "target_max_length": col_info_target['max_length'],
-                            "target_numeric_precision": col_info_target['numeric_precision'],
-                            "target_numeric_scale": col_info_target['numeric_scale']
+                            "target_column_name": str(col_info_target['column_name']),
+                            "target_data_type": str(col_info_target['data_type']),
+                            "target_max_length": str(col_info_target['max_length']),
+                            "target_numeric_precision": str(col_info_target['numeric_precision']),
+                            "target_numeric_scale": str(col_info_target['numeric_scale']),
                         }
                         comparison_results.append(comparison_result)
 
@@ -419,12 +419,15 @@ def app1() -> None:
             else:
                 try:
                     target_schema = fetch_schema(target_server, target_database, target_username, target_password)
-                    generate_excel_report(
-                        workbook,
-                        source_schema,
-                        target_schema,
-                        nested_target_dbs[target_db_number]["database"]
-                    )
+                    try:
+                        generate_excel_report(
+                            workbook,
+                            source_schema,
+                            target_schema,
+                            nested_target_dbs[target_db_number]["database"]
+                        )
+                    except Exception as e:
+                        print(f"Error generating excel report but target database connection was successful.: {str(e)}")
 
                 except Exception as e:
                     print(
