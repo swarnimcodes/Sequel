@@ -1,3 +1,4 @@
+import getpass
 import datetime
 import difflib
 import os
@@ -58,7 +59,7 @@ def fetch_schema(server, database, username, password) -> dict:
     schema_info = {}
 
     query = """
-    SELECT
+SELECT
     t.TABLE_SCHEMA,
     t.TABLE_NAME,
     c.COLUMN_NAME,
@@ -91,6 +92,119 @@ def fetch_schema(server, database, username, password) -> dict:
     AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
     AND t.TABLE_NAME NOT LIKE '%TICKET%'
     AND t.TABLE_NAME NOT LIKE '%MIG%'
+    AND t.TABLE_NAME NOT LIKE '%_BKUP%'
+    AND t.TABLE_NAME NOT LIKE '%_BKP%'
+    AND t.TABLE_NAME NOT LIKE '%20%'
+    AND t.TABLE_NAME NOT LIKE '%SWAPNIL%'
+    AND t.TABLE_NAME NOT LIKE '%SQLQUERY%'
+    AND t.TABLE_NAME NOT LIKE '%FARHEEN%'
+    AND t.TABLE_NAME NOT LIKE '%SHUBHAM%'
+    AND t.TABLE_NAME NOT LIKE '%CHHAGAN%'
+    AND t.TABLE_NAME NOT LIKE '%_TCKT%'
+    AND t.TABLE_NAME NOT LIKE '%1_9%'
+    AND t.TABLE_NAME NOT LIKE '%$%'
+    AND t.TABLE_NAME NOT LIKE '%_TID%'
+    AND t.TABLE_NAME NOT LIKE '%tblPivoPOAttainmet%'
+    AND t.TABLE_NAME NOT LIKE '%_BK%'
+    AND t.TABLE_NAME NOT LIKE '%_BAK%'
+    AND t.TABLE_NAME NOT LIKE '%BACKUP%'
+    AND t.TABLE_NAME NOT LIKE '%TKT%'
+    AND t.TABLE_NAME NOT LIKE '%22%'
+    AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
+    AND t.TABLE_NAME NOT LIKE '%TICKET%'
+    AND t.TABLE_NAME NOT LIKE 'ACC_lms%'
+    AND t.TABLE_NAME NOT LIKE 'ACC_123%'
+    AND t.TABLE_NAME NOT LIKE 'ACC_aarv%'
+    AND t.TABLE_NAME NOT LIKE 'ACC_BS23%'
+    AND t.TABLE_NAME NOT LIKE 'Acc_M01'
+    AND t.TABLE_NAME NOT LIKE 'ACC_CR23'
+    AND t.TABLE_NAME NOT LIKE 'ACC_amtt'
+    AND t.TABLE_NAME NOT LIKE 'ACC_5186'
+    AND t.TABLE_NAME NOT LIKE 'ACC_ms21'
+    AND t.TABLE_NAME NOT LIKE 'ACC_Com'
+    AND t.TABLE_NAME NOT LIKE 'ACC_DA23'
+    AND t.TABLE_NAME NOT LIKE 'Acc_M01'
+    AND t.TABLE_NAME NOT LIKE 'ACC_c001'
+    AND t.TABLE_NAME NOT LIKE 'Acc_MCA'
+    AND t.TABLE_NAME NOT LIKE 'ACC_CR23'
+    AND t.TABLE_NAME NOT LIKE 'ACC_5186'
+    AND t.TABLE_NAME NOT LIKE 'ACC_BE'
+    AND t.TABLE_NAME NOT LIKE 'ACC_M01'
+    AND t.TABLE_NAME NOT LIKE 'ACC_CR23'
+    AND t.TABLE_NAME NOT LIKE 'ACC_5186'
+    AND t.TABLE_NAME NOT LIKE 'ACC_ms21'
+    AND t.TABLE_NAME NOT LIKE 'ACC_DA23'
+    AND t.TABLE_NAME NOT LIKE 'ACC_M01'
+    AND t.TABLE_NAME NOT LIKE 'ACC_CR23'
+    AND t.TABLE_NAME NOT LIKE 'ACC_DA23'
+    AND t.TABLE_NAME NOT LIKE 'ACC_01'
+    AND t.TABLE_NAME NOT LIKE 'ACC_RC21'
+    AND t.TABLE_NAME NOT LIKE '%_BKUP%'
+    AND t.TABLE_NAME NOT LIKE '%_BKP%'
+    AND t.TABLE_NAME NOT LIKE '%20%'
+    AND t.TABLE_NAME NOT LIKE '%SWAPNIL%'
+    AND t.TABLE_NAME NOT LIKE '%SQLQUERY%'
+    AND t.TABLE_NAME NOT LIKE '%FARHEEN%'
+    AND t.TABLE_NAME NOT LIKE '%SHUBHAM%'
+    AND t.TABLE_NAME NOT LIKE '%CHHAGAN%'
+    AND t.TABLE_NAME NOT LIKE '%_TCKT%'
+    AND t.TABLE_NAME NOT LIKE '%1_9%'
+    AND t.TABLE_NAME NOT LIKE '%$%'
+    AND t.TABLE_NAME NOT LIKE '%_TID%'
+    AND t.TABLE_NAME NOT LIKE '%tblPivoPOAttainmet%'
+    AND t.TABLE_NAME NOT LIKE '%_BK%'
+    AND t.TABLE_NAME NOT LIKE '%_BAK%'
+    AND t.TABLE_NAME NOT LIKE '%BACKUP%'
+    AND t.TABLE_NAME NOT LIKE '%TKT%'
+    AND t.TABLE_NAME NOT LIKE '%22%'
+    AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
+    AND t.TABLE_NAME NOT LIKE '%TICKET%'
+    AND t.TABLE_NAME NOT LIKE '%lms%'
+    AND t.TABLE_NAME NOT LIKE '%123%'
+    AND t.TABLE_NAME NOT LIKE '%aarv%'
+    AND t.TABLE_NAME NOT LIKE '%BS23%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%amtt%'
+    AND t.TABLE_NAME NOT LIKE '%5186%'
+    AND t.TABLE_NAME NOT LIKE '%ms21%'
+    AND t.TABLE_NAME NOT LIKE '%Com%'
+    AND t.TABLE_NAME NOT LIKE '%DA23%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%c001%'
+    AND t.TABLE_NAME NOT LIKE '%MCA%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%5186%'
+    AND t.TABLE_NAME NOT LIKE '%BE%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%5186%'
+    AND t.TABLE_NAME NOT LIKE '%ms21%'
+    AND t.TABLE_NAME NOT LIKE '%DA23%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%DA23%'
+    AND t.TABLE_NAME NOT LIKE '%01%'
+    AND t.TABLE_NAME NOT LIKE '%RC21%'
+    AND t.TABLE_NAME NOT LIKE '%ACC_gaag%'
+    AND t.TABLE_NAME NOT LIKE '%ACC_RM1%'
+    AND t.TABLE_NAME NOT LIKE '%ACC_ms55%'
+    AND t.TABLE_NAME NOT LIKE '%ACC_MC21%'
+    AND t.TABLE_NAME NOT LIKE '%ACC_C23%'
+    AND t.TABLE_NAME NOT LIKE '%ACC_1%'
+    AND t.TABLE_NAME NOT LIKE '%BSACIST%'
+    AND t.TABLE_NAME NOT LIKE '%BSAC%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%BSACIST%'
+    AND t.TABLE_NAME NOT LIKE '%TBAK%'
+    AND t.TABLE_NAME NOT LIKE '%BS23%'
+    AND t.TABLE_NAME NOT LIKE '%BE%'
+    AND t.TABLE_NAME NOT LIKE '%MBA%'
+    AND t.TABLE_NAME NOT LIKE '%MCA%'
+    AND t.TABLE_NAME NOT LIKE '%ME%'
+    AND t.TABLE_NAME NOT LIKE '%TEST%'
+    AND t.TABLE_NAME NOT LIKE '%DEV%'
+    AND t.TABLE_NAME NOT LIKE '%BEPT%'
     )
     ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
     """
@@ -133,9 +247,14 @@ def generate_excel_report(
     ):
     
     comparison_results = []
-    comparison_results = perform_schema_comparison(source_schema, target_schema)
+    try:
+        comparison_results = perform_schema_comparison(source_schema, target_schema)
+    except Exception as e:
+        print(f"ERROR: could not compare schemas successfully: {str(e)}")
+    
     sheet = workbook.create_sheet(target_db_name)
-
+    # workbook.active = workbook.sheetnames.index(target_db_name)
+    
     sheet["A1"] = "Schema"
     sheet["B1"] = "Table Name"
     sheet["C1"] = "Column Name"
@@ -196,10 +315,15 @@ def generate_excel_report(
 
 def perform_schema_comparison(source_schema, target_schema) -> list:
     comparison_results = []
+    # print(f"Source Schema: {source_schema}")
     for schema in source_schema:
+        # print(f"Schema in source schema: {schema}")
         for table_name in source_schema[schema]:
+            # print(f"Table Name: {table_name}")
             source_columns = source_schema[schema][table_name]
+            # print(f"Source Columns: {source_columns}")
             target_columns = target_schema[schema].get(table_name, [])
+            # print(f"Target Columns: {target_columns}")
 
             if not bool(target_columns):
                 print(f"{table_name} Table Not found in target database")
@@ -226,12 +350,14 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                 comparison_results.append(comparison_result)
             else:
                 for col_info_source in source_columns:
+                    # print(f"col_info_source: {col_info_source}")
                     col_name_source = col_info_source["column_name"]
+                    # print(f"col_name_source: {col_name_source}")
                     col_info_target = next(
                         (col for col in target_columns if col["column_name"] == col_name_source),
                         None,
                     )
-
+                    # print(f"col_info_target: {col_info_target}")
                     if col_info_target is None:
                         # TODO:
                         # Missing Column
@@ -243,11 +369,11 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                             "source_specification": str(col_info_source),
                             "target_specification": "",
                             # CHANGES
-                            "source_column_name": "",
-                            "source_data_type": "",
-                            "source_max_length": "",
-                            "source_numeric_precision": "",
-                            "source_numeric_scale": "",
+                            "source_column_name": col_info_source['column_name'],
+                            "source_data_type": col_info_source['data_type'],
+                            "source_max_length": col_info_source['max_length'],
+                            "source_numeric_precision": col_info_source['numeric_precision'],
+                            "source_numeric_scale": col_info_source['numeric_scale'],
                             # Target will be empty ideally
                             "target_column_name": "",
                             "target_data_type": "",
@@ -267,17 +393,17 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                             "source_specification": str(col_info_source),
                             "target_specification": str(col_info_target),
                             # Changes
-                            "source_column_name": str(col_info_source['column_name']),
-                            "source_data_type": str(col_info_source['data_type']),
-                            "source_max_length": str(col_info_source['max_length']),
-                            "source_numeric_precision": str(col_info_source['numeric_precision']),
-                            "source_numeric_scale": str(col_info_source['numeric_scale']),
+                            "source_column_name": col_info_source['column_name'],
+                            "source_data_type": col_info_source['data_type'],
+                            "source_max_length": col_info_source['max_length'],
+                            "source_numeric_precision": col_info_source['numeric_precision'],
+                            "source_numeric_scale": col_info_source['numeric_scale'],
                             # Target
-                            "target_column_name": str(col_info_target['column_name']),
-                            "target_data_type": str(col_info_target['data_type']),
-                            "target_max_length": str(col_info_target['max_length']),
-                            "target_numeric_precision": str(col_info_target['numeric_precision']),
-                            "target_numeric_scale": str(col_info_target['numeric_scale']),
+                            "target_column_name": col_info_target['column_name'],
+                            "target_data_type": col_info_target['data_type'],
+                            "target_max_length": col_info_target['max_length'],
+                            "target_numeric_precision": col_info_target['numeric_precision'],
+                            "target_numeric_scale": col_info_target['numeric_scale'],
                         }
                         comparison_results.append(comparison_result)
 
@@ -325,11 +451,9 @@ def app1() -> None:
         print("Fetching Source Information... \n")
 
         try:
-            source_schema,= fetch_schema(
-                source_server, source_database, source_username, source_password
-            )
+            source_schema = fetch_schema(source_server, source_database, source_username, source_password)
             
-            print(f"Source Schema:\n{source_schema}")
+            # print(f"Source Schema:\n{str(source_schema)}")
             
         except Exception:
             raise ValueError(
@@ -1185,66 +1309,57 @@ def app4():
 
 def app5():
     try:
-        folder = input("Enter folder path:\t")
+        server = input("Enter Server Address:\t")
+        database = input("Enter Database:\t")
+        username = input("Enter Username:\t")
+        password = input("Enter Password:\t")
+        
+        sps: list[str] = fetch_stored_procedures(server, database, username, password)
+        
+        total_files = len(sps)
 
-        # Get the list of files in the source folder
-        file_list = os.listdir(folder)
-        ignore_patterns = [
-            r".*_SWAPNIL.*",
-            r".*_SQLQUERY.*",
-            r".*_MIG.*",
-            r".*_FARHEEN.*",
-            r".*_SHUBHAM.*",
-            r".*_CHHAGAN.*",
-            r".*_TCKT.*",
-            r".*_tblPivoPOAttainmet.*",
-            r".*_BK.*",
-            r".*_BACKUP.*",
-            r".*_TKT.*",
-            r".*_TICKET.*",
-            r".*_EXCEL.*",
-            r".*_BACKUP.*",
-        ]
+        ignore_file_path = input("Drag and drop the ignore file:\t")
+        filelist_after_excl = ignore(ignore_file_path, sps)
+
+        num_files_aft_excl = len(filelist_after_excl)
+
+        num_excl_files = (total_files - num_files_aft_excl)
+        
+        # excluded_files = sps - filelist_after_excl
 
         print("\n\nSummary:\n")
-        print(f"Number of files before exclusion: {len(file_list)}")
-        print(f"File list before exclusion: {file_list}")
+        print(f"Number of files before exclusion: {len(sps)}")
+        print(f"File list before exclusion: {sps}")
         print("\n\n")
 
-        # Create a regular expression pattern to match ignore patterns
-        ignore_pattern = "|".join(ignore_patterns)
-        ignore_pattern = f"({ignore_pattern})"
+        print(f"Number of files after exclusion: {num_files_aft_excl}")
+        print(f"File list after exclusion: {filelist_after_excl}\n\n")
+        print(f"Number of files excluded: {num_excl_files}")
+        # print(f"Excluded files: {excluded_files}")
+        
 
-        # Initialize a list to store excluded files
-        excluded_files = []
-
-        # Filter the files based on the ignore pattern
-        file_list_excl = []
-        for file in file_list:
-            if re.match(ignore_pattern, file):
-                excluded_files.append(file)
-            else:
-                file_list_excl.append(file)
-
-        print(f"Number of files after exclusion: {len(file_list_excl)}")
-        print(f"File list after exclusion: {file_list_excl}\n\n")
-        print(f"Number of files excluded: {len(excluded_files)}")
-        print(f"Excluded files: {excluded_files}")
-
-        wb_excl = openpyxl.Workbook()
-        ws = wb_excl.active
+        wb = openpyxl.Workbook()
+        sheet = wb.active
 
         # Headers
-        ws["A1"] = "Total Files"
-        ws["B1"] = "Original Files"
-        ws["C1"] = "Backup Files"
+        sheet["A1"] = "Files in Database"
+        sheet["B1"] = "Included or Excluded"
 
         # Data
-        ws.append([len(file_list), len(file_list_excl), len(excluded_files)])
+        row = 2
+        for sp in sps:
+            if sp in filelist_after_excl:
+                sheet.append([sp, "Included"])
+            else:
+                sheet.append([sp, "Excluded"])
+            row += 1
+        
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
         ex_file_name = f"Backup_File_Statistics_{timestamp}.xlsx"
 
-        wb_excl.save(ex_file_name)
+        wb.save(ex_file_name)
+        
+        os.system(f'explorer /select,"{os.path.abspath(ex_file_name)}"')
 
     except Exception as e:
         print(f"{str(e)}")
@@ -1383,29 +1498,32 @@ def app2_1() -> None:
         sp_info = {"SP Name": sp}
 
         # Loop through target DBs
-        for target_db in target_db_details.values():
-            source_sp_content = fetch_sp_content(
-                sp, server, database, username, password
-            )
-            try:
-                target_sp_content = fetch_sp_content(
-                    sp,
-                    target_db["server"],
-                    target_db["database"],
-                    target_db["username"],
-                    target_db["password"],
+        if target_db_details.values() is not None:
+            for target_db in target_db_details.values():
+                source_sp_content = fetch_sp_content(
+                    sp, server, database, username, password
                 )
+                try:
+                    target_sp_content = fetch_sp_content(
+                        sp,
+                        target_db["server"],
+                        target_db["database"],
+                        target_db["username"],
+                        target_db["password"],
+                    )
 
-                stripped_source_sp = strip_sql_comments(source_sp_content).upper()
-                stripped_target_sp = strip_sql_comments(target_sp_content).upper()
+                    stripped_source_sp = strip_sql_comments(source_sp_content).upper()
+                    stripped_target_sp = strip_sql_comments(target_sp_content).upper()
 
-                if stripped_source_sp == stripped_target_sp:
-                    sp_info[target_db["database"]] = "PRESENT & EQUAL"
-                else:
-                    sp_info[target_db["database"]] = "PRESENT & UNEQUAL"
+                    if stripped_source_sp == stripped_target_sp:
+                        sp_info[target_db["database"]] = "PRESENT & EQUAL"
+                    else:
+                        sp_info[target_db["database"]] = "PRESENT & UNEQUAL"
 
-            except Exception:
-                sp_info[target_db["database"]] = "ABSENT"
+                except Exception:
+                    sp_info[target_db["database"]] = "ABSENT"
+            else:
+                print("Target DB Details are None")
 
         sp_data.append(sp_info)
 
@@ -1696,10 +1814,7 @@ def compare_schemas(source_folder, target_folders):
                     db_name = os.path.basename(target_folder)
                     file_name = os.path.basename(source_sql_file)
 
-                    missing_tables, different_tables = compare_schemas(
-                        source_schema,
-                        target_schema
-                        )
+                    missing_tables, different_tables = compare_schemas(source_schema, target_schema)
 
                     # Add comparison results to the summary sheet
                     for table in missing_tables:
@@ -1722,6 +1837,101 @@ def app1_2():
 
 # ############
 
+import os
+import openpyxl
+
+def app7() -> None:
+    folder = input("Enter path for folder with excel files:\t")
+    
+    datatype1 = ["bit", "datetime", "date", "int", "bigint", "tinyint", "time"]
+    datatype2 = ["numeric", "decimal", "float"]
+    datatype3 = ["varchar", "nvarchar", "char", "nchar"]
+    
+    # List directories
+    xl_files = os.listdir(folder)
+    
+    for xl_file in xl_files:
+        workbook = openpyxl.load_workbook(os.path.join(folder, xl_file))
+        
+        for sheet_name in workbook.sheetnames:
+            sheet = workbook[sheet_name]
+            sheet[f'Q1'] = "Query"
+            
+            for row in range(2, sheet.max_row + 1):
+                operation = str(sheet.cell(row=row, column=4).value)
+                data_type = str(sheet.cell(row=row, column=8).value)
+                
+                # Check the operation and data type and build SQL accordingly
+                if operation == "Missing Column":
+                    # if any("abc" in s for s in xs):
+                    if any(data_type in s for s in datatype1):
+                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " " , H{row})')
+                    elif any(data_type in s for s in datatype2):
+                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " ", H{row}, " (", J{row}, ",", K{row}, ")")')
+
+                        # sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " " , H{row}, " (", J{row},",","K{row},")")')
+                    elif any(data_type in s for s in datatype3):
+                        max_length = sheet[f'I{row}']
+                        if max_length == -1:
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " " , H{row}," (max)")')
+                        else:
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " " , H{row}, " (",I{row},")")')
+                    else:
+                        print("Unknown data type")
+                elif operation == "Different Specification":
+                    if any(data_type in s for s in datatype1):
+                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", C{row}, " " , H{row})')
+                    elif any(data_type in s for s in datatype2):
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", C{row}, " ", H{row}, " (", J{row}, ",", K{row}, ")")')
+                    elif any(data_type in s for s in datatype3):
+                        max_length = sheet[f'I{row}']
+                        if max_length == -1:
+                            #                                           =CONCAT("ALTER TABLE ",B12," ALTER COLUMN ",C12," ",H12,"(max)")
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", C{row}, " " , H{row}, " (max)")')
+                        else:
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", C{row}, " " , H{row}, " (", I{row}, ")")')
+                elif operation == "Missing Table":
+                    print("Table is missing. Skipping operation.")
+                else:
+                    print(f"Type of error unknown for row {row} in sheet {sheet_name}")
+                    
+        workbook.save(os.path.join(folder, xl_file))
+
+
+
+
+
+# column D: Type of Error
+# column H: source data type
+# query in column Q
+# inside each sheet first check type of error
+
+# if type of error is missing columns
+# then source data type
+# if data type is bit,datetime,date,int
+# then alter table table_name add column_name datatype
+# if data type is numeric,decimal
+# then write query: alter table table_name add column_name datatype(Source Numeric Precision,Source Numeric Scale)
+# if data type nvarchar or varchar
+# alter table table_name add column_name datatype(Source Max Length) --if Source Max Length = -1 max
+
+# else if type of error is diff specification
+# then check data type
+# if data type is bit,datetime,date,int
+# alter table table_name alter column column_name datatype
+# if data type is numeric,decimal
+# alter table table_name alter column column_name datatype(Source Numeric Precision,Source Numeric Scale)
+# if data type nvarchar or varchar
+# alter table table_name alter column column_name datatype(Source Max Length) --if Source Max Length = -1 max
+
+# else if type of error is missing table
+# then do nothing
+
+# below is for different specification
+
+
+
+# ##########################
 
 def main():
     try:
@@ -1752,6 +1962,7 @@ def main():
         )
         print(YELLOW + "\n5. Excluded File Statistics: " + RESET)
         print(YELLOW + "\n6. Exclude Files Based on Pattern Matching: " + RESET)
+        print(YELLOW + "\n7. Generate Alter Query" + RESET)
 
         choice = int(input("Enter your choice:\t"))
         print(f"You have selected option: {choice}.\n")
@@ -1769,7 +1980,7 @@ def main():
         elif choice == 6:
             app6()
         elif choice == 7:
-            pass
+            app7()
         elif choice == 8:
             app1_2()
         else:
