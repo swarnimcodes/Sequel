@@ -5,3 +5,7 @@
 testsql
 *_pycache_*/
 *details.txt*
+dist/
+xlfiles/
+cc/
+_pycache_/
