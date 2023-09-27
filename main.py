@@ -275,6 +275,7 @@ def fetch_schema(server, database, username, password) -> dict:
     AND t.TABLE_NAME NOT LIKE '%ckt_%'
     AND t.TABLE_NAME NOT LIKE '%user_acc_back%'
     AND t.TABLE_NAME NOT LIKE '%user_acc_superadmin%'
+    AND t.TABLE_NAME NOT LIKE 'FINAL_PAYSLIP_DATA'
     
     )
     ORDER BY t.TABLE_NAME
@@ -402,11 +403,13 @@ def perform_schema_comparison(source_schema, target_schema) -> list[dict]:
                 source_columns = source_schema[schema][table_name]
             except Exception as e:
                 print(f"Failed while setting source solumns\n {table_name}")
+                print(f"Exception: {str(e)}")
             # print(f"Source Columns: {source_columns}")
             try:
                 target_columns = target_schema[schema].get(table_name, [])
             except Exception as e:
                 print(f"Failed while setting target columns {table_name}")
+                print(f"Exception: {str(e)}")
             source_columns = source_schema[schema][table_name]
             target_columns = target_schema[schema].get(table_name, [])
             # print(f"Target Columns: {target_columns}")
@@ -1971,8 +1974,6 @@ def app1_2():
 
 # ############
 
-import os
-import openpyxl
 
 def app7() -> None:
     folder = input("Enter path for folder with excel files:\t")
@@ -1989,41 +1990,43 @@ def app7() -> None:
         
         for sheet_name in workbook.sheetnames:
             sheet = workbook[sheet_name]
-            sheet[f'Q1'] = "Query"
+            sheet['Q1'] = "Query"
             
             for row in range(2, sheet.max_row + 1):
                 operation = str(sheet.cell(row=row, column=4).value)
                 data_type = str(sheet.cell(row=row, column=8).value)
+                max_length = sheet.cell(row=row, column=9).value
+                # column_name = sheet.cell(row=row, column=3).value
                 
                 # Check the operation and data type and build SQL accordingly
                 if operation == "Missing Column":
                     # if any("abc" in s for s in xs):
                     if any(data_type in s for s in datatype1):
-                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " " , H{row})')
+                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", "[", C{row}, "]", " " , H{row})')
                     elif any(data_type in s for s in datatype2):
-                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " ", H{row}, " (", J{row}, ",", K{row}, ")")')
+                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", "[", C{row}, "]", " ", H{row}, " (", J{row}, ",", K{row}, ")")')
 
                         # sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " " , H{row}, " (", J{row},",","K{row},")")')
                     elif any(data_type in s for s in datatype3):
-                        max_length = sheet[f'I{row}']
+                        
                         if max_length == -1:
-                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " " , H{row}," (max)")')
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", "[", C{row}, "]", " " , H{row}," (max)")')
                         else:
-                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", C{row}, " " , H{row}, " (",I{row},")")')
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ADD ", "[", C{row}, "]", " " , H{row}, " (",I{row},")")')
                     else:
                         print("Unknown data type")
                 elif operation == "Different Specification":
                     if any(data_type in s for s in datatype1):
-                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", C{row}, " " , H{row})')
+                        sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", "[", C{row}, "]", " " , H{row})')
                     elif any(data_type in s for s in datatype2):
-                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", C{row}, " ", H{row}, " (", J{row}, ",", K{row}, ")")')
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", "[", C{row}, "]", " ", H{row}, " (", J{row}, ",", K{row}, ")")')
                     elif any(data_type in s for s in datatype3):
-                        max_length = sheet[f'I{row}']
+                        
                         if max_length == -1:
                             #                                           =CONCAT("ALTER TABLE ",B12," ALTER COLUMN ",C12," ",H12,"(max)")
-                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", C{row}, " " , H{row}, " (max)")')
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", "[", C{row}, "]", " " , H{row}, " (max)")')
                         else:
-                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", C{row}, " " , H{row}, " (", I{row}, ")")')
+                            sheet.cell(row=row, column=17, value=f'=CONCATENATE("ALTER TABLE ", B{row}, " ALTER COLUMN ", "[", C{row}, "]", " " , H{row}, " (", I{row}, ")")')
                 elif operation == "Missing Table":
                     print("Table is missing. Skipping operation.")
                 else:
