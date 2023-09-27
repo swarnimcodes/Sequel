@@ -1248,8 +1248,8 @@ def app3():
         sp_name = sql_file
         if sql_file.endswith(".sql"):
             if (
-                os.path.exists(os.path.join(folder2_path, sql_file)) == True
-                and os.path.exists(os.path.join(folder1_path, sql_file)) != True
+                os.path.exists(os.path.join(folder2_path, sql_file)) is True
+                and os.path.exists(os.path.join(folder1_path, sql_file)) is not True
             ):
                 print(f"{sql_file} present in target but not in source")
                 comparison_results.append(
@@ -1282,9 +1282,9 @@ def app3():
     ):
         if row[3].value == "Different":
             row[3].fill = different_color
-        if row[1].value == False:
+        if row[1].value is False:
             row[1].fill = missing_color
-        if row[2].value == False:
+        if row[2].value is False:
             row[2].fill = missing_color
 
     num_files_absent = sum(not row[2] for row in comparison_results)
