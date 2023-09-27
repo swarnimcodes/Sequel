@@ -253,6 +253,29 @@ def fetch_schema(server, database, username, password) -> dict:
     AND t.TABLE_NAME NOT LIKE '%sim%'
     AND t.TABLE_NAME NOT LIKE '%S01%'
     AND t.TABLE_NAME NOT LIKE '%S02%'
+    
+    
+    AND t.TABLE_NAME NOT LIKE '%ACC_01%'
+    AND t.TABLE_NAME NOT LIKE '%ACC_BE%'
+    AND t.TABLE_NAME NOT LIKE '%MS21%'
+    AND t.TABLE_NAME NOT LIKE '%C001%'
+    AND t.TABLE_NAME NOT LIKE '%ACC_TEST%'
+    AND t.TABLE_NAME NOT LIKE '%TCKT%'
+    AND t.TABLE_NAME NOT LIKE '%48069%'
+    AND t.TABLE_NAME NOT LIKE '%acc_%'
+    AND t.TABLE_NAME NOT LIKE '%MIGR%'
+    AND t.TABLE_NAME NOT LIKE '%MIGRATION%'
+    AND t.TABLE_NAME NOT LIKE '%PAY_ITMTEMP%'
+    AND t.TABLE_NAME NOT LIKE '%PAY_PAYTEMP%'
+    AND t.TABLE_NAME NOT LIKE '%PAY_ITET%'
+    AND t.TABLE_NAME NOT LIKE '%TEMP%'
+    AND t.TABLE_NAME NOT LIKE '%TID%'
+    AND t.TABLE_NAME NOT LIKE '%_tkt%'
+    AND t.TABLE_NAME NOT LIKE '%ckt_%'
+    AND t.TABLE_NAME NOT LIKE '%ckt_%'
+    AND t.TABLE_NAME NOT LIKE '%user_acc_back%'
+    AND t.TABLE_NAME NOT LIKE '%user_acc_superadmin%'
+    
     )
     ORDER BY t.TABLE_NAME
     """
