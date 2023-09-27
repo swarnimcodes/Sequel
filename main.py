@@ -1,5 +1,5 @@
 # helix text editor git test
-import getpass
+# import getpass
 import datetime
 import difflib
 import os
@@ -53,17 +53,35 @@ def connect_to_server(server, database, username, password):
         
     return connection
 
+def list_exception_tables(server, database, username, password) -> list:
+    connection = connect_to_server(server, database, username, password)
+    cursor = connection.cursor()
+    query = """
+    SELECT TABLE_SCHEMA, TABLE_NAME
+    FROM INFORMATION_SCHEMA.TABLES
+    WHERE TABLE_SCHEMA NOT LIKE 'dbo'
+    """
+    cursor.execute(query)
+    except_tables_list: list = []
+    except_tables_list = cursor.fetchall()
+    
+    return except_tables_list
 
 def fetch_schema(server, database, username, password) -> dict:
     connection = connect_to_server(server, database, username, password)
     cursor = connection.cursor()
     schema_info = {}
-
+    
+    # AND c.COLUMN_NAME <> 'S# No#'
+    # AND t.TABLE_NAME <> 'RCP_BankMaster'
+    # AND t.TABLE_NAME <> 'RCP_Excel_Caste'
+    # AND t.TABLE_NAME <> 'RCP_Excel_City'
+       
     query = """
     SELECT
-    t.TABLE_SCHEMA,
-    t.TABLE_NAME,
-    c.COLUMN_NAME,
+    LTRIM(RTRIM(t.TABLE_SCHEMA)) AS TABLE_SCHEMA,
+    LTRIM(RTRIM(t.TABLE_NAME)) AS TABLE_NAME,
+    LTRIM(RTRIM(c.COLUMN_NAME)) AS COLUMN_NAME,
     c.DATA_TYPE,
     c.CHARACTER_MAXIMUM_LENGTH,
     c.NUMERIC_PRECISION,
@@ -72,6 +90,7 @@ def fetch_schema(server, database, username, password) -> dict:
     JOIN INFORMATION_SCHEMA.COLUMNS AS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND
     t.TABLE_NAME = c.TABLE_NAME
     WHERE t.TABLE_TYPE = 'BASE TABLE'
+    AND t.TABLE_SCHEMA LIKE 'dbo'
     AND
     (
     t.TABLE_NAME NOT LIKE '%BKUP%'
@@ -236,33 +255,39 @@ def fetch_schema(server, database, username, password) -> dict:
     AND t.TABLE_NAME NOT LIKE '%S01%'
     AND t.TABLE_NAME NOT LIKE '%S02%'
     )
-    ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
+    ORDER BY t.TABLE_NAME
     """
+    # # ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
     # try removing the above line
     print("\nExecuting the schema query. Please wait...\n")
     cursor.execute(query)
     print("Schema query execution" + GREEN + " completed" + RESET + ".\n")
-    rows = cursor.fetchall()
+    # rows = cursor.fetchall()
+    # rows = cursor.fetchmany(1000)
+    batchsize: int = 1000
+    batch = cursor.fetchmany(batchsize)
+    
+    while batch:
+        for row in batch:
+            table_schema = row.TABLE_SCHEMA
+            table_name = row.TABLE_NAME
+            column_name = row.COLUMN_NAME
+            data_type = row.DATA_TYPE
+            max_length = row.CHARACTER_MAXIMUM_LENGTH
+            numeric_precision = row.NUMERIC_PRECISION
+            numeric_scale = row.NUMERIC_SCALE
 
-    for row in rows:
-        table_schema = row.TABLE_SCHEMA
-        table_name = row.TABLE_NAME
-        column_name = row.COLUMN_NAME
-        data_type = row.DATA_TYPE
-        max_length = row.CHARACTER_MAXIMUM_LENGTH
-        numeric_precision = row.NUMERIC_PRECISION
-        numeric_scale = row.NUMERIC_SCALE
 
-        schema_info.setdefault(table_schema, {}).setdefault(table_name, []).append(
-            {
-                "column_name": column_name,
-                "data_type": data_type,
-                "max_length": max_length,
-                "numeric_precision": numeric_precision,
-                "numeric_scale": numeric_scale,
-            }
-        )
-
+            schema_info.setdefault(table_schema, {}).setdefault(table_name, []).append(
+                {
+                    "column_name": column_name,
+                    "data_type": data_type,
+                    "max_length": max_length,
+                    "numeric_precision": numeric_precision,
+                    "numeric_scale": numeric_scale,
+                }
+            )
+        batch = cursor.fetchmany(batchsize)
     cursor.close()
     connection.close()
     return schema_info
@@ -344,17 +369,26 @@ def generate_excel_report(
         row = row + 1
 
 
-def perform_schema_comparison(source_schema, target_schema) -> list:
-    comparison_results = []
+def perform_schema_comparison(source_schema, target_schema) -> list[dict]:
+    comparison_results: list[dict] = []
     # print(f"Source Schema: {source_schema}")
     for schema in source_schema:
         # print(f"Schema in source schema: {schema}")
         for table_name in source_schema[schema]:
-            # print(f"Table Name: {table_name}")
-            source_columns = source_schema[schema][table_name]
+            print(f"Table Name: {table_name}")
+            try:
+                source_columns = source_schema[schema][table_name]
+            except Exception as e:
+                print(f"Failed while setting source solumns\n {table_name}")
             # print(f"Source Columns: {source_columns}")
+            try:
+                target_columns = target_schema[schema].get(table_name, [])
+            except Exception as e:
+                print(f"Failed while setting target columns {table_name}")
+            source_columns = source_schema[schema][table_name]
             target_columns = target_schema[schema].get(table_name, [])
             # print(f"Target Columns: {target_columns}")
+            # print(f"Comparing {source_columns} with {target_columns}")
 
             if target_columns is None:
                 print(f"{table_name} Table Not found in target database")
@@ -378,7 +412,13 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                     "target_numeric_precision": "",
                     "target_numeric_scale": "",
                 }
-                comparison_results.append(comparison_result)
+                # print(f"{comparison_result}\n\n\n")
+                try:
+                    comparison_results.append(comparison_result)
+                except Exception as e:
+                    print(f"Failed inside table col none for {target_columns}")
+                    print(f"Exception: {str(e)}\n\n\n")
+                # print(f"{comparison_results}\n\n\n")
             else:
                 for col_info_source in source_columns:
                     # print(f"col_info_source: {col_info_source}")
@@ -411,7 +451,13 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                             "target_numeric_precision": "",
                             "target_numeric_scale": "",
                         }
-                        comparison_results.append(comparison_result)
+                        # print(f"{comparison_result}\n\n\n")
+                        try:
+                            comparison_results.append(comparison_result)
+                        except Exception as e:
+                            print(f"Failed inside col info target none for {col_info_source}")
+                            print(f"Exception: {str(e)}\n\n\n")
+                        # print(f"{comparison_results}\n\n\n")
 
                     # Different Specification
                     elif col_info_source != col_info_target:
@@ -435,32 +481,20 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                             "target_numeric_precision": col_info_target['numeric_precision'],
                             "target_numeric_scale": col_info_target['numeric_scale'],
                         }
-                        comparison_results.append(comparison_result)
+                        # print(f"{comparison_result}\n\n\n")
+                        try:
+                            comparison_results.append(comparison_result)
+                        except Exception as e:
+                            print(f"Failed inside col != col for {col_info_source}")
+                            print(f"Exception: {str(e)}")
+                        # print(f"{comparison_results}\n\n\n")
                     elif col_info_source == col_info_target:
-                        comparison_result = {
-                            "schema": schema,
-                            "table_name": table_name,
-                            "column_name": col_name_source,
-                            "type_of_error": "Different Specification",
-                            "source_specification": str(col_info_source),
-                            "target_specification": str(col_info_target),
-                            # Changes
-                            "source_column_name": col_info_source['column_name'],
-                            "source_data_type": col_info_source['data_type'],
-                            "source_max_length": col_info_source['max_length'],
-                            "source_numeric_precision": col_info_source['numeric_precision'],
-                            "source_numeric_scale": col_info_source['numeric_scale'],
-                            # Target
-                            "target_column_name": col_info_target['column_name'],
-                            "target_data_type": col_info_target['data_type'],
-                            "target_max_length": col_info_target['max_length'],
-                            "target_numeric_precision": col_info_target['numeric_precision'],
-                            "target_numeric_scale": col_info_target['numeric_scale'],
-                        }
-                        comparison_results.append(comparison_result)
-                    else:
+                        # print("cols equal continuing\n\n\n")
                         continue
-
+                    else:
+                        print("What case even is this??\n\n\n")
+                        continue
+    # print(f"{comparison_results}\n\n\n")
     return comparison_results
 
 
@@ -504,10 +538,14 @@ def app1() -> None:
 
         print("Fetching Source Information... \n")
 
+
         try:
             source_schema = fetch_schema(source_server, source_database, source_username, source_password)
-            # print(source_schema)
+            print(type(source_schema))
             
+            debug_source_schema_file = "ss.txt"
+            with open(debug_source_schema_file, 'w') as dts:
+                dts.write(str(source_schema))
             # print(f"Source Schema:\n{str(source_schema)}")
             
         except Exception:
@@ -598,7 +636,10 @@ def app1() -> None:
             else:
                 try:
                     target_schema = fetch_schema(target_server, target_database, target_username, target_password)
-                    # print(target_schema)
+                    print(type(target_schema))
+                    debug_target_schema_file = "ts.txt"
+                    with open(debug_target_schema_file, 'w') as dts:
+                        dts.write(str(target_schema))
                     try:
                         generate_excel_report(
                             workbook,
@@ -670,6 +711,21 @@ def app1() -> None:
         print(
             f"\nNumber of databases compared against source: {number_of_target_db_copy}"
         )
+        
+        try:
+            ex_tables = list_exception_tables(source_server, source_database, source_username, source_password)
+            print(RED
+                  + "\n\n"
+                  + "EXCEPTION CAUSING TABLES:"
+                  + RESET
+                  + f"{ex_tables}\n"
+                  + "THESE HAVE BEEN IGNORED BUT "
+                  + f"PLEASE RECTIFY THEM IN DATABASE {source_database}\n"
+                  + "NO EXCEPTIONS HAVE BEEN CHECKED FOR IN TARGET DATABASE\n\n"
+                  )
+        except Exception as e:
+            print(f"Exception: {str(e)}")
+        
         os.system(f'explorer /select,"{os.path.abspath(excel_file_name)}"')
         input("\n\nPress Enter to exit...")
     except ValueError as ve:
