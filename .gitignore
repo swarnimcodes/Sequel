@@ -9,3 +9,4 @@ dist/
 xlfiles/
 cc/
 _pycache_/
+*build/
