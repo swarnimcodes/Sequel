@@ -1,4 +1,3 @@
-# helix text editor git test
 # import getpass
 import datetime
 import difflib
