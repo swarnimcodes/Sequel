@@ -2048,4 +2048,5 @@ def main():
         print(f"Error occurred: {str(e)}")
 
 
-if __na
+if __name__ == "__main__":
+    main()
