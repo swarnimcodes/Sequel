@@ -49,7 +49,7 @@ def connect_to_server(server, database, username, password):
         # cursor = connection.cursor()
     except Exception as e:
         print(f"Error: {str(e)}")
-
+        
     return connection
 
 
@@ -59,7 +59,7 @@ def fetch_schema(server, database, username, password) -> dict:
     schema_info = {}
 
     query = """
-SELECT
+    SELECT
     t.TABLE_SCHEMA,
     t.TABLE_NAME,
     c.COLUMN_NAME,
@@ -112,33 +112,32 @@ SELECT
     AND t.TABLE_NAME NOT LIKE '%22%'
     AND t.TABLE_NAME NOT LIKE '%TICKET_ID%'
     AND t.TABLE_NAME NOT LIKE '%TICKET%'
-    AND t.TABLE_NAME NOT LIKE 'ACC_lms%'
-    AND t.TABLE_NAME NOT LIKE 'ACC_123%'
-    AND t.TABLE_NAME NOT LIKE 'ACC_aarv%'
-    AND t.TABLE_NAME NOT LIKE 'ACC_BS23%'
-    AND t.TABLE_NAME NOT LIKE 'Acc_M01'
-    AND t.TABLE_NAME NOT LIKE 'ACC_CR23'
-    AND t.TABLE_NAME NOT LIKE 'ACC_amtt'
-    AND t.TABLE_NAME NOT LIKE 'ACC_5186'
-    AND t.TABLE_NAME NOT LIKE 'ACC_ms21'
-    AND t.TABLE_NAME NOT LIKE 'ACC_Com'
-    AND t.TABLE_NAME NOT LIKE 'ACC_DA23'
-    AND t.TABLE_NAME NOT LIKE 'Acc_M01'
-    AND t.TABLE_NAME NOT LIKE 'ACC_c001'
-    AND t.TABLE_NAME NOT LIKE 'Acc_MCA'
-    AND t.TABLE_NAME NOT LIKE 'ACC_CR23'
-    AND t.TABLE_NAME NOT LIKE 'ACC_5186'
-    AND t.TABLE_NAME NOT LIKE 'ACC_BE'
-    AND t.TABLE_NAME NOT LIKE 'ACC_M01'
-    AND t.TABLE_NAME NOT LIKE 'ACC_CR23'
-    AND t.TABLE_NAME NOT LIKE 'ACC_5186'
-    AND t.TABLE_NAME NOT LIKE 'ACC_ms21'
-    AND t.TABLE_NAME NOT LIKE 'ACC_DA23'
-    AND t.TABLE_NAME NOT LIKE 'ACC_M01'
-    AND t.TABLE_NAME NOT LIKE 'ACC_CR23'
-    AND t.TABLE_NAME NOT LIKE 'ACC_DA23'
-    AND t.TABLE_NAME NOT LIKE 'ACC_01'
-    AND t.TABLE_NAME NOT LIKE 'ACC_RC21'
+    AND t.TABLE_NAME NOT LIKE '%lms%'
+    AND t.TABLE_NAME NOT LIKE '%123%'
+    AND t.TABLE_NAME NOT LIKE '%aarv%'
+    AND t.TABLE_NAME NOT LIKE '%BS23%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%amtt%'
+    AND t.TABLE_NAME NOT LIKE '%5186%'
+    AND t.TABLE_NAME NOT LIKE '%ms21%'
+    AND t.TABLE_NAME NOT LIKE '%Com%'
+    AND t.TABLE_NAME NOT LIKE '%DA23%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%c001%'
+    AND t.TABLE_NAME NOT LIKE '%MCA%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%5186%'
+    AND t.TABLE_NAME NOT LIKE '%BE%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%5186%'
+    AND t.TABLE_NAME NOT LIKE '%ms21%'
+    AND t.TABLE_NAME NOT LIKE '%DA23%'
+    AND t.TABLE_NAME NOT LIKE '%M01%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%DA23%'
+    AND t.TABLE_NAME NOT LIKE '%RC21%'
     AND t.TABLE_NAME NOT LIKE '%_BKUP%'
     AND t.TABLE_NAME NOT LIKE '%_BKP%'
     AND t.TABLE_NAME NOT LIKE '%20%'
@@ -186,12 +185,11 @@ SELECT
     AND t.TABLE_NAME NOT LIKE '%DA23%'
     AND t.TABLE_NAME NOT LIKE '%01%'
     AND t.TABLE_NAME NOT LIKE '%RC21%'
-    AND t.TABLE_NAME NOT LIKE '%ACC_gaag%'
-    AND t.TABLE_NAME NOT LIKE '%ACC_RM1%'
-    AND t.TABLE_NAME NOT LIKE '%ACC_ms55%'
-    AND t.TABLE_NAME NOT LIKE '%ACC_MC21%'
-    AND t.TABLE_NAME NOT LIKE '%ACC_C23%'
-    AND t.TABLE_NAME NOT LIKE '%ACC_1%'
+    AND t.TABLE_NAME NOT LIKE '%gaag%'
+    AND t.TABLE_NAME NOT LIKE '%RM1%'
+    AND t.TABLE_NAME NOT LIKE '%ms55%'
+    AND t.TABLE_NAME NOT LIKE '%MC21%'
+    AND t.TABLE_NAME NOT LIKE '%C23%'
     AND t.TABLE_NAME NOT LIKE '%BSACIST%'
     AND t.TABLE_NAME NOT LIKE '%BSAC%'
     AND t.TABLE_NAME NOT LIKE '%M01%'
@@ -205,10 +203,41 @@ SELECT
     AND t.TABLE_NAME NOT LIKE '%TEST%'
     AND t.TABLE_NAME NOT LIKE '%DEV%'
     AND t.TABLE_NAME NOT LIKE '%BEPT%'
+    AND t.TABLE_NAME NOT LIKE '%HITS%'
+    AND t.TABLE_NAME NOT LIKE '%BSACIST%'
+    AND t.TABLE_NAME NOT LIKE '%ms21%'
+    AND t.TABLE_NAME NOT LIKE '%test%'
+    AND t.TABLE_NAME NOT LIKE '%c001%'
+    AND t.TABLE_NAME NOT LIKE '%m01%'
+    AND t.TABLE_NAME NOT LIKE '%CR23%'
+    AND t.TABLE_NAME NOT LIKE '%C23%'
+    AND t.TABLE_NAME NOT LIKE '%123%'
+    AND t.TABLE_NAME NOT LIKE '%lms%'
+    AND t.TABLE_NAME NOT LIKE '%AARV%'
+    AND t.TABLE_NAME NOT LIKE '%BE%'
+    AND t.TABLE_NAME NOT LIKE '%MBA%'
+    AND t.TABLE_NAME NOT LIKE '%MCA%'
+    AND t.TABLE_NAME NOT LIKE '%ME%'
+    AND t.TABLE_NAME NOT LIKE '%TEST%'
+    AND t.TABLE_NAME NOT LIKE '%DEV%'
+    AND t.TABLE_NAME NOT LIKE '%BEPT%'
+    AND t.TABLE_NAME NOT LIKE '%BE%'
+    AND t.TABLE_NAME NOT LIKE '%MBA%'
+    AND t.TABLE_NAME NOT LIKE '%MCA%'
+    AND t.TABLE_NAME NOT LIKE '%ME%'
+    AND t.TABLE_NAME NOT LIKE '%TEST%'
+    AND t.TABLE_NAME NOT LIKE '%DEV%'
+    AND t.TABLE_NAME NOT LIKE '%BEPT%'
+    AND t.TABLE_NAME NOT LIKE '%DA23%'
+    AND t.TABLE_NAME NOT LIKE '%MAHR%'
+    AND t.TABLE_NAME NOT LIKE '%sims%'
+    AND t.TABLE_NAME NOT LIKE '%sim%'
+    AND t.TABLE_NAME NOT LIKE '%S01%'
+    AND t.TABLE_NAME NOT LIKE '%S02%'
     )
     ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
     """
-
+    # try removing the above line
     print("\nExecuting the schema query. Please wait...\n")
     cursor.execute(query)
     print("Schema query execution" + GREEN + " completed" + RESET + ".\n")
@@ -249,6 +278,7 @@ def generate_excel_report(
     comparison_results = []
     try:
         comparison_results = perform_schema_comparison(source_schema, target_schema)
+        # print(comparison_results)
     except Exception as e:
         print(f"ERROR: could not compare schemas successfully: {str(e)}")
     
@@ -325,7 +355,7 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
             target_columns = target_schema[schema].get(table_name, [])
             # print(f"Target Columns: {target_columns}")
 
-            if not bool(target_columns):
+            if target_columns is None:
                 print(f"{table_name} Table Not found in target database")
                 comparison_result = {
                     "schema": schema,
@@ -359,7 +389,6 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                     )
                     # print(f"col_info_target: {col_info_target}")
                     if col_info_target is None:
-                        # TODO:
                         # Missing Column
                         comparison_result = {
                             "schema": schema,
@@ -406,6 +435,30 @@ def perform_schema_comparison(source_schema, target_schema) -> list:
                             "target_numeric_scale": col_info_target['numeric_scale'],
                         }
                         comparison_results.append(comparison_result)
+                    elif col_info_source == col_info_target:
+                        comparison_result = {
+                            "schema": schema,
+                            "table_name": table_name,
+                            "column_name": col_name_source,
+                            "type_of_error": "Different Specification",
+                            "source_specification": str(col_info_source),
+                            "target_specification": str(col_info_target),
+                            # Changes
+                            "source_column_name": col_info_source['column_name'],
+                            "source_data_type": col_info_source['data_type'],
+                            "source_max_length": col_info_source['max_length'],
+                            "source_numeric_precision": col_info_source['numeric_precision'],
+                            "source_numeric_scale": col_info_source['numeric_scale'],
+                            # Target
+                            "target_column_name": col_info_target['column_name'],
+                            "target_data_type": col_info_target['data_type'],
+                            "target_max_length": col_info_target['max_length'],
+                            "target_numeric_precision": col_info_target['numeric_precision'],
+                            "target_numeric_scale": col_info_target['numeric_scale'],
+                        }
+                        comparison_results.append(comparison_result)
+                    else:
+                        continue
 
     return comparison_results
 
@@ -452,6 +505,7 @@ def app1() -> None:
 
         try:
             source_schema = fetch_schema(source_server, source_database, source_username, source_password)
+            # print(source_schema)
             
             # print(f"Source Schema:\n{str(source_schema)}")
             
@@ -543,6 +597,7 @@ def app1() -> None:
             else:
                 try:
                     target_schema = fetch_schema(target_server, target_database, target_username, target_password)
+                    # print(target_schema)
                     try:
                         generate_excel_report(
                             workbook,
@@ -1993,5 +2048,4 @@ def main():
         print(f"Error occurred: {str(e)}")
 
 
-if __name__ == "__main__":
-    main()
+if __na
