@@ -42,15 +42,7 @@ def ignore(ign_filepath: str, orig_filelist) -> list[str]:
     return filtered_filelist
 
 
-def connect_to_server(server, database, username, password):
-    try:
-        connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
-        connection = pyodbc.connect(connection_string)
-        # cursor = connection.cursor()
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        
-    return connection
+
 
 def list_exception_tables(server, database, username, password) -> list:
     connection = connect_to_server(server, database, username, password)
@@ -65,6 +57,18 @@ def list_exception_tables(server, database, username, password) -> list:
     except_tables_list = cursor.fetchall()
     
     return except_tables_list
+
+
+def connect_to_server(server, database, username, password):
+    try:
+        connection_string = f"DRIVER=SQL Server;SERVER={server};DATABASE={database};UID={username};PWD={password}"
+        connection = pyodbc.connect(connection_string)
+        # cursor = connection.cursor()
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        
+    return connection
+
 
 def fetch_schema(server, database, username, password) -> dict:
     connection = connect_to_server(server, database, username, password)
